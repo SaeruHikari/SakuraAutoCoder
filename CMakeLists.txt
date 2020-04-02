@@ -4,7 +4,7 @@ enable_testing()
 
 include_directories(${CMAKE_SOURCE_DIR}) 
  
-set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD 11) 
 set(CMAKE_CXX_STANDARD 20)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -31,5 +31,5 @@ add_executable(
 	SReflCodeGen.cpp
 	CodeGen/Refl/types.hpp
 	CodeGen/Refl/types.cpp
- "CodeGen/Refl/parser.cpp")
+	CodeGen/Refl/parser.cpp)
 target_link_libraries(SReflCodeGen ${CLANG_LIBS})

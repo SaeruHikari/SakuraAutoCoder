@@ -1,8 +1,0 @@
-# ninja log v5
-1	254	607530988	CMakeFiles/SReflCodeGen.dir/SReflCodeGen.cpp.obj	356ee3c1af3ced7d
-261	684	607530988	SReflCodeGen.exe	bf223d3136e05c67
-0	240	607531567	CMakeFiles/SReflCodeGen.dir/CodeGen/Refl/types.cpp.obj	26b8d0f0e1f79612
-2	358	607531568	CMakeFiles/SReflCodeGen.dir/SReflCodeGen.cpp.obj	e8e213d5f6148d42
-358	742	607531568	SReflCodeGen.exe	66c23039d66ea5ac
-0	617	607532238	CMakeFiles/SReflCodeGen.dir/CodeGen/Refl/types.cpp.obj	26b8d0f0e1f79612
-617	1018	607532239	SReflCodeGen.exe	66c23039d66ea5ac

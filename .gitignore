@@ -11,6 +11,7 @@
 *meta.h
 *.generated.h
 */out
+/out
 #
 *.jpg
 *.png
