@@ -1,0 +1,23 @@
+﻿################################################################################
+# This .gitignore file was automatically created by SaeruHikari.
+################################################################################
+
+/SakuraEngine/.vscode
+/SakuraEngine/build
+/.vs
+/build
+/Extern/googletest
+/.VSCodeCounter
+*meta.h
+*.generated.h
+*/out
+#
+*.jpg
+*.png
+*.tif
+*.dds
+*.bmp
+*.obj
+GPATH
+GTAGS
+GRTAGS
