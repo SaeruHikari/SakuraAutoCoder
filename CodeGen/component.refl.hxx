@@ -14,8 +14,9 @@ namespace Sakura::Test
     struct [[component]] TestComponent
     {
         [[norefl]] float attrib;
-        [[meta("This is a test name.")]] std::string name;
-        void Method(std::string inVal, TestComponent& inRef);
+        [[meta("Fxxk ISO C++23")]] std::string name;
+        [[meta("Can't wait to use compile-time-reflection")]]
+            void Method(std::string inVal, TestComponent& inRef);
         static float staticAttrib;
     };
 }

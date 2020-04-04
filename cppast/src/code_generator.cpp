@@ -1140,6 +1140,16 @@ bool cppast::generate_code(code_generator& generator, const cpp_entity& e)
     return result;
 }
 
+bool cppast::generate_code_custom(
+    code_generator& generator, const cpp_entity& e,
+    std::function<bool(code_generator&, const cpp_entity&, cpp_access_specifier_kind)> cfun)
+{
+    generator.main_entity_ = type_safe::ref(e);
+    auto result            = cfun(generator, e, cpp_public);
+    generator.main_entity_ = nullptr;
+    return result;
+}
+
 void detail::write_template_arguments(
     code_generator::output&                                                output,
     type_safe::optional<type_safe::array_ref<const cpp_template_argument>> arguments)

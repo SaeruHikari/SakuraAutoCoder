@@ -26,12 +26,7 @@ namespace Sakura::refl
     class Object final
     {
     public:
-        Object()
-			: id_(SClass<void>().id)
-			, deleter_(NoOp)
-		{
-
-		}
+		Object();
         template<typename T>
 		explicit Object(T&& t);
 
@@ -264,4 +259,11 @@ namespace Sakura::refl
             delete static_cast<std::decay_t<T>*>(data);
         };
     }
+
+	Object::Object()
+	: id_(SClass<void>().id)
+		, deleter_(NoOp)
+	{
+
+	}
 }

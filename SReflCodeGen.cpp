@@ -11,6 +11,7 @@
 #include <cppast/cpp_namespace.hpp>          // for cpp_namespace
 #include <cppast/libclang_parser.hpp> // for libclang_parser, libclang_compile_config, cpp_entity,...
 #include <cppast/visitor.hpp>         // for visit()
+#include "CodeGen/Refl/codegen.hpp"
 
 
 // print help options
@@ -72,7 +73,7 @@ void print_entity(std::ostream& out, const cppast::cpp_entity& e)
 			code_generator(const cppast::cpp_entity& e)
 			{
 				// kickoff code generation here
-				cppast::generate_code(*this, e);
+				cppast::generate_code_custom(*this, e, Sakura::refl::generate_code_impl);
 			}
 
 			// return the result

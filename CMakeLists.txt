@@ -31,12 +31,8 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 add_executable(
 	SReflCodeGen
 	SReflCodeGen.cpp
-	CodeGen/Refl/types.hpp
-	CodeGen/Refl/types.cpp
-	CodeGen/Refl/Parser.hpp
-	CodeGen/Refl/Parser.cpp
-	CodeGen/Refl/ParserUtils.cpp
-	CodeGen/Refl/ParserUtils.hpp
+	CodeGen/Refl/codegen.hpp
+	CodeGen/Refl/codegen.cpp
 	)
 add_executable(
 	ReflTest

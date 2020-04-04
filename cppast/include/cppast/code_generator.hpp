@@ -512,6 +512,8 @@ private:
     type_safe::optional_ref<const cpp_entity> main_entity_;
 
     friend bool generate_code(code_generator& generator, const cpp_entity& e);
+    friend bool generate_code_custom(code_generator& generator, const cpp_entity& e,
+        std::function<bool(code_generator&, const cpp_entity&, cpp_access_specifier_kind)>);
 };
 
 /// Generates code for the given entity.
@@ -520,6 +522,10 @@ private:
 ///
 /// \returns Whether or not any code was actually written.
 bool generate_code(code_generator& generator, const cpp_entity& e);
+
+bool generate_code_custom(
+    code_generator& generator, const cpp_entity& e,
+    std::function<bool(code_generator&, const cpp_entity&, cpp_access_specifier_kind)>);
 
 /// \exclude
 class cpp_template_argument;
