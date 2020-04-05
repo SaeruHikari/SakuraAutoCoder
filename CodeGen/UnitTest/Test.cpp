@@ -12,33 +12,30 @@ struct [[component]] TestComponent
 	static float staticAttrib;
 };
 
+template<> 
+inline static constexpr const char* Sakura::refl::GetClassNameT<TestComponent>()
+{ return "TestComponent"; }
+
 template<>
-struct SClass<TestComponent> final : public IType
+inline static const Reference Sakura::refl::GetFieldT<TestComponent>(const Reference& o, const std::string&)
 {
-	inline static const constexpr char name[] = "TestComponent";
-	inline static const constexpr std::size_t id_ =
-		_Fnv1a_append_bytes(Sakura::refl::_FNV_offset_basis, name, length(name) * sizeof(char));
-
-	virtual const char* GetName() const override final;
-};
-
-const char* SClass<TestComponent>::GetName() const
-{
-	return name;
+	return o;
 }
+
 
 int main(void)
 {
 	std::cout << Sakura::refl::GetTypeId<int>() << std::endl;
 	std::cout << Sakura::refl::GetTypeId<TestComponent>() << std::endl;
-	std::cout << SClass<TestComponent>().GetName() << std::endl;
-	std::cout << Sakura::refl::SClass<int>().GetName() << std::endl;
-	std::cout << Sakura::refl::SClass<void>().GetName() << std::endl;
+	std::cout << SClass<TestComponent>::GetName() << std::endl;
+	std::cout << Sakura::refl::SClass<int>::GetName() << std::endl;
+	std::cout << Sakura::refl::SClass<const int>::GetName() << std::endl;
+
 	int testVal = 15;
 	const int& targVal = testVal;
-	int byPass = Sakura::refl::SClass<int>().GetField(testVal, "").GetT<int>();
+	Sakura::refl::SClass<int>::GetField(testVal, "");
 	// => int byPass = Sakura::refl::dyn::GetClass("int").GetField(testVal, "").GetT("int");
-	bool tcheck = Sakura::refl::SClass<int>().GetField(targVal, "").IsT<int>();
-	bool ccheck = Sakura::refl::SClass<int>().GetField(targVal, "").IsT<int>();
+	/*bool tcheck = Sakura::refl::SClass<int>().GetField(targVal, "").IsT<int>();
+	bool ccheck = Sakura::refl::SClass<int>().GetField(targVal, "").IsT<int>();*/
 	return 0;
 }

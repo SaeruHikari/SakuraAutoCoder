@@ -170,25 +170,59 @@ namespace Sakura::refl
 		virtual bool TryTranslate(int value, std::string& out) = 0;
 	};
 
-	template<typename T> struct SClass : IClass {};
+
+	template<typename T>
+	inline static constexpr const char* GetClassNameT();
+	template<typename T>
+	inline static const Reference GetFieldT(const Reference& o, const std::string& fieldname);
+
+	template<typename T>
+	struct SClass 
+	{
+		using ClassName = std::decay_t<T>;
+		inline static const constexpr char* GetName() { return GetClassNameT<ClassName>(); }
+		inline static const constexpr std::size_t id_ = 
+			_Fnv1a_append_bytes(Sakura::refl::_FNV_offset_basis,
+				GetClassNameT<ClassName>(), length(GetClassNameT<ClassName>()) * sizeof(char));
+		inline static const constexpr std::size_t GetTypeId() { return id_; }
+		inline static const Reference GetField(const Reference& o, const std::string& fieldName)
+		{
+			return GetFieldT<ClassName>(o, fieldName);
+		}
+		inline static const constexpr std::size_t GetFieldCount() { return 1; }
+		inline static const constexpr std::size_t GetStaticFieldCount() { return 0; }
+		inline static const Reference GetStaticField(const Reference& o, const std::string& fieldName)
+		{
+			return Reference<nullptr_t>(nullptr);
+		}
+	};
+
+	template<typename T>
+	struct DynSClass : IClass
+	{
+		virtual const char* GetName() const override final { return GetClassNameT<T>(); }
+	};
+
 	template<typename T> struct SEnum : IEnum {};
 	template <typename T, T t> struct Function : IFunction {};
 	template <typename T, T t> struct Method : IMethod {};
 
-#if defined(_AMD64_)
-    inline constexpr size_t _FNV_offset_basis = 14695981039346656037ULL;
-    inline constexpr size_t _FNV_prime = 1099511628211ULL;
+#if true
+    inline constexpr static const size_t _FNV_offset_basis = 14695981039346656037ULL;
+    inline constexpr static const size_t _FNV_prime = 1099511628211ULL;
 #else 
-    inline constexpr size_t _FNV_offset_basis = 2166136261U;
-    inline constexpr size_t _FNV_prime = 16777619U;
+    inline constexpr static const size_t _FNV_offset_basis = 2166136261U;
+    inline constexpr static const size_t _FNV_prime = 16777619U;
 #endif 
 
-	inline constexpr size_t _Fnv1a_append_bytes(size_t _Val, const char* _First,
-		const size_t _Count) noexcept { 
+	inline static const constexpr size_t _Fnv1a_append_bytes(size_t _Val, const char* _First,
+		const size_t _Count) noexcept 
+	{ 
         // accumulate range [_First, _First + _Count) into partial FNV-1a hash _Val
-		for (size_t _Idx = 0; _Idx < _Count; ++_Idx) {
+		for (size_t _Idx = 0; _Idx < _Count; ++_Idx) 
+		{
 			_Val ^= static_cast<size_t>(_First[_Idx]);
-			_Val *= _FNV_prime;
+			_Val *= _FNV_prime; 
 		}
 		return _Val;
 	}
@@ -200,31 +234,9 @@ namespace Sakura::refl
 
     using namespace std;
 #define GEN_REFL_BASIC_TYPES_TWO_PARAM(T, NAME) \
-    template<>\
-	struct SClass<const T> : public IClass\
-	{\
-		inline static const constexpr char name[] = #NAME;\
-		inline static const constexpr std::size_t id_ = \
-			_Fnv1a_append_bytes(_FNV_offset_basis, name, length(name) * sizeof(char));\
-        virtual const char* GetName() const override final{return name;}\
-		virtual int GetFieldCount() const override final{return 1;}\
-		virtual Reference GetField(const Reference& o,\
-			const std::string& name) const override final {return o;}\
-		virtual int GetStaticFieldCount() const override final {return 0;}\
-		virtual Reference GetStaticField(const std::string& name) const override final\
-			{throw std::exception("No static field of basic types.");}\
-		virtual int GetMethodCount() const override final {return 0;}\
-		virtual std::vector<std::unique_ptr<IMethod>> GetMethod(\
-			const std::string& name) const override final\
-			{throw std::exception("No static field of basic types.");}\
-		virtual int GetStaticMethodCount() const override final {return 0;}\
-		virtual std::vector<std::unique_ptr<IFunction>> GetStaticMethod(\
-			const std::string& name) const override final\
-			{throw std::exception("No static method of basic types.");}\
-		inline static const bool isConst() {return false;}\
-	};\
-	template<>\
-	struct SClass<T> : public SClass<const T>{inline static const bool isConst() {return true;}};
+	template<> inline static constexpr const char* GetClassNameT<T>(){return #NAME;}\
+	template<> inline static const Reference GetFieldT<T>(const Reference& o, const std::string& fieldName){return o;}
+
 
 #define GEN_REFL_BASIC_TYPES(T) GEN_REFL_BASIC_TYPES_TWO_PARAM(T, T)
 
@@ -247,7 +259,7 @@ namespace Sakura::refl
 	template <typename T>
 	auto constexpr GetTypeId()
 	{
-		return SClass<T>::id_;
+		return SClass<T>::GetTypeId();
 	}
 
     template <typename T>
@@ -264,7 +276,7 @@ namespace Sakura::refl
     }
 
 	Object::Object()
-	: id_(SClass<void>().id_)
+	: id_(SClass<void>::GetTypeId())
 		, deleter_(NoOp)
 	{
 
@@ -273,7 +285,7 @@ namespace Sakura::refl
 	template<typename T>
 	bool Object::IsT() const
 	{
-		return (SClass<T>::id_ == id_);
+		return (SClass<T>::GetTypeId() == id_);
 	}
 
 	template<typename T>
@@ -287,6 +299,6 @@ namespace Sakura::refl
 	template <typename T>
 	bool Reference::IsT() const
 	{
-		return (SClass<T>::id_ == id_);
+		return (SClass<T>::GetTypeId() == id_);
 	}
 }
