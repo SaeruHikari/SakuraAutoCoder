@@ -33,6 +33,8 @@ add_executable(
 	SReflCodeGen.cpp
 	CodeGen/Refl/codegen.hpp
 	CodeGen/Refl/codegen.cpp
+	CodeGen/Refl/codegen.class.hpp
+	CodeGen/Refl/codegen.class.cpp
 	)
 add_executable(
 	ReflTest

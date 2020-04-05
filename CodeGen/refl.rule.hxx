@@ -19,23 +19,23 @@
 
 namespace Sakura::refl
 {
-    // Object is a class similar in nature to std::any, only it does not require
+	// Object is a class similar in nature to std::any, only it does not require
 	// C++17 and does not require stored objects to be copyable.
 
 	void NoOp(void*) {}
-    class Object final
-    {
-    public:
+	class Object final
+	{
+	public:
 		Object();
-        template<typename T>
+		template<typename T>
 		explicit Object(T&& t);
 
-        Object(Object&& o)
+		Object(Object&& o) noexcept
 			: deleter_(NoOp)
 		{
 			*this = std::move(o);
 		}
-        Object& operator=(Object&& o)
+		Object& operator=(Object&& o) noexcept
 		{
 			// Release existing resource if any.
 			deleter_(data_);
@@ -46,72 +46,72 @@ namespace Sakura::refl
 			o.deleter_ = NoOp;
 			return *this;
 		}
-        Object(const Object& o) = delete;
-        Object& operator=(const Object& o) = delete;
+		Object(const Object& o) = delete;
+		Object& operator=(const Object& o) = delete;
 
 		~Object()
 		{
 			deleter_(data_);
 		}
 
-        template<typename T>
-		bool IsT() const 
-		{
-			return (SClass<T>().id == id_);
-		}
+		template<typename T>
+		bool IsT() const;
 
-        template<typename T>
-        const T& GetT() const
+		template<typename T>
+		const T& GetT() const
 		{
 			return *static_cast<T*>(data_);
 		}
 
-        bool IsVoid() const;
-    private:
+		bool IsVoid() const;
+	private:
 		size_t id_;
-        void* data_ = nullptr;
-        std::function<void(void*)> deleter_;
-    };  
+		void* data_ = nullptr;
+		std::function<void(void*)> deleter_;
+	};
 
-    // Reference is a non-const, type erased wrapper around any object.
-    class Reference final
-    {
-    public:
-        template<typename T>
-		Reference(T& t)
-			:data_(&t), id_(SClass<T>().id)
-		{
-			
-		}
-        Reference(const Reference& o) = default;
+	// Reference is a non-const, type erased wrapper around any object.
+	class Reference final
+	{
+	public:
+		template<typename T>
+		constexpr Reference(T& t);
+
+		Reference(const Reference& o) = default;
 		Reference& operator=(const Reference& o) = default;
 
 		template <typename T>
-		bool IsT() const
-		{
-			return (SClass<T>().id == id_);
-		}
+		bool IsT() const;
 
 		template <typename T>
 		T& GetT() const
 		{
 			return *static_cast<T*>(data_);
 		}
-	private:
 		size_t id_;
+	private:
 		void* data_ = nullptr;
-    };
-
-	struct Parameter
-	{
-		std::string Name;
-		std::string Type;
 	};
 
 	struct IType
 	{
 		virtual ~IType() = default;
 		virtual const char* GetName() const = 0;
+	};
+
+	enum class ETypes : uint8_t
+	{
+		EFunction,
+		EMethod,
+		EClass,
+		EEnum
+	};
+
+	struct Parameter
+	{
+		std::string Name;
+		IType* Param;
+		ETypes Type;
 	};
 
     struct IFunction : public IType
@@ -201,10 +201,10 @@ namespace Sakura::refl
     using namespace std;
 #define GEN_REFL_BASIC_TYPES_TWO_PARAM(T, NAME) \
     template<>\
-	struct SClass<T> final : public IClass\
+	struct SClass<const T> : public IClass\
 	{\
 		inline static const constexpr char name[] = #NAME;\
-		inline static const constexpr std::size_t id = \
+		inline static const constexpr std::size_t id_ = \
 			_Fnv1a_append_bytes(_FNV_offset_basis, name, length(name) * sizeof(char));\
         virtual const char* GetName() const override final{return name;}\
 		virtual int GetFieldCount() const override final{return 1;}\
@@ -221,7 +221,10 @@ namespace Sakura::refl
 		virtual std::vector<std::unique_ptr<IFunction>> GetStaticMethod(\
 			const std::string& name) const override final\
 			{throw std::exception("No static method of basic types.");}\
-	};
+		inline static const bool isConst() {return false;}\
+	};\
+	template<>\
+	struct SClass<T> : public SClass<const T>{inline static const bool isConst() {return true;}};
 
 #define GEN_REFL_BASIC_TYPES(T) GEN_REFL_BASIC_TYPES_TWO_PARAM(T, T)
 
@@ -244,7 +247,7 @@ namespace Sakura::refl
 	template <typename T>
 	auto constexpr GetTypeId()
 	{
-		return SClass<T>::id;
+		return SClass<T>::id_;
 	}
 
     template <typename T>
@@ -261,9 +264,29 @@ namespace Sakura::refl
     }
 
 	Object::Object()
-	: id_(SClass<void>().id)
+	: id_(SClass<void>().id_)
 		, deleter_(NoOp)
 	{
 
+	}
+
+	template<typename T>
+	bool Object::IsT() const
+	{
+		return (SClass<T>::id_ == id_);
+	}
+
+	template<typename T>
+	inline constexpr Reference::Reference(T& t)
+		: id_(GetTypeId<std::remove_reference_t<T>>())
+		, data_((void*)&t)
+	{
+
+	}
+
+	template <typename T>
+	bool Reference::IsT() const
+	{
+		return (SClass<T>::id_ == id_);
 	}
 }
