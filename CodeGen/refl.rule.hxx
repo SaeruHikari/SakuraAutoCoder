@@ -116,7 +116,8 @@ namespace Sakura::refl
 	{
 		EFunction = 1,
 		EMethod = EFunction << 1,
-		EStruct = EMethod << 1,
+		EAtomic = EMethod << 1,
+		EStruct = EAtomic << 1,
 		EClass = EStruct << 1,
 		EEnum = EClass << 1,
 		EConst = EEnum << 1,
@@ -126,48 +127,54 @@ namespace Sakura::refl
 	};
 	using EFlags = uint32_t;
 
-	void AtomicStream(const Reference& ref, const std::string& type)
-	{
-		if (type.starts_with("uint64"))
-			std::cout << ref.GetT<uint64_t>();
-		else if (type.starts_with("uint32"))
-			std::cout << ref.GetT<uint32_t>();
-		else if (type.starts_with("uint8"))
-			std::cout << ref.GetT<uint8_t>();
-		else if (type.starts_with("uint16"))
-			std::cout << ref.GetT<uint16_t>();
-		else if (type.starts_with("string"))
-			std::cout << ref.GetT<std::string>();
-		else if (type.starts_with("cstr"))
-			std::cout << ref.GetT<const char*>();
-	}
-
-	template<typename T>
-	inline static constexpr const char* GetClassNameT();
 	template<typename T>
 	inline static const Reference GetFieldT(const Reference& o, const std::string& fieldname);
 	template<typename T>
-	struct ClassInfo { inline static const constexpr nullptr_t fields = nullptr; };
+	struct ClassInfo 
+	{ 
+		inline static const constexpr char* GetClassName() { return "NULL"; }
+		inline static const constexpr nullptr_t fields = nullptr; 
+	};
+
+	struct Meta
+	{
+		struct MetaPiece
+		{
+			constexpr MetaPiece(const char* _t, const char* _v)
+				:title(_t), value(_v)
+			{}
+			const char* title = nullptr;
+			const char* value = nullptr;
+		};
+		constexpr Meta(const MetaPiece* _ms, uint32_t _mc)
+			:metas(_ms), metaCount(_mc)
+		{
+
+		}
+		const MetaPiece* metas;//8 36
+		uint32_t metaCount = 0;//4 40
+	};
 
 	struct Field
 	{
-		const char* name;
-		const char* type;
-		EFlags flags = 0;
-		std::size_t offset;
+		const char* name;//8
+		const char* type;//8 16
+		EFlags flags = 0;//4 20
+		uint32_t offset;// 4 24
+		uint32_t size;//   4 28
+		Meta metas;
 	};
 	using Parameter = Field;
-
 
 	template<typename T>
 	struct SClass 
 	{
 		using ClassName = std::decay_t<T>;
 		using ClassInfo = ClassInfo<ClassName>;
-		inline static const constexpr char* GetName() { return ClassInfo::GetClassNameT(); }
+		inline static const constexpr char* GetName() { return ClassInfo::GetClassName(); }
 		inline static const constexpr std::size_t id_ = 
 			_Fnv1a_append_bytes(Sakura::refl::_FNV_offset_basis,
-				ClassInfo::GetClassNameT(), length(ClassInfo::GetClassNameT()) * sizeof(char));
+				ClassInfo::GetClassName(), length(ClassInfo::GetClassName()) * sizeof(char));
 		inline static const constexpr std::size_t GetTypeId() { return id_; }
 		inline static const Reference GetField(const Reference& o, const std::string& fieldName)
 		{
@@ -233,13 +240,13 @@ namespace Sakura::refl
 	template<> inline static const Reference GetFieldT<T>(const Reference& o, const std::string& fieldName){return o;}\
 	template<> struct ClassInfo<T> \
 	{\
-		inline static const constexpr char* GetClassNameT(){return #NAME;}\
-		inline static const constexpr Field fields[1] = { {"value", GetClassNameT<T>(), EClass, 0} };\
+		inline static const constexpr char* GetClassName(){return #NAME;}\
+		inline static const constexpr Field fields[1] = { {"value", #NAME, EClass| EAtomic, 0, sizeof(T), {nullptr, 0}} };\
 	};
 
 #define GEN_REFL_BASIC_TYPES(T) GEN_REFL_BASIC_TYPES_TWO_PARAM(T, T)
 
-    GEN_REFL_BASIC_TYPES(void);
+    //GEN_REFL_BASIC_TYPES(void);
     GEN_REFL_BASIC_TYPES(char);
     GEN_REFL_BASIC_TYPES(uint8_t);
     GEN_REFL_BASIC_TYPES(uint16_t);
@@ -256,28 +263,49 @@ namespace Sakura::refl
 	GEN_REFL_BASIC_TYPES_TWO_PARAM(std::byte, byte);
 	GEN_REFL_BASIC_TYPES_TWO_PARAM(const char*, cstr);
 
+
+
+	/*
+	struct Field
+	{
+		const char* name;//8
+		const char* type;//8 16
+		EFlags flags = 0;//4 20
+		uint32_t offset;// 4 24
+		uint32_t size;//   4 28
+		const Meta* metas;//8 36
+		uint32_t metaCount = 0;//4 40
+	};
+	*/
 	template<> inline static const Reference GetFieldT<Field>(const Reference& o, const std::string& name)
 	{
-		if (name == "type")
-			return o.GetT<Field>().type;
-		else if (name == "name")
+		if (name == "name")
 			return o.GetT<Field>().name;
-		else if (name == "offset")
-			return o.GetT<Field>().offset;
+		else if (name == "type")
+			 return o.GetT<Field>().type;
 		else if (name == "flags")
 			return o.GetT<Field>().flags;
+		else if (name == "offset")
+			return o.GetT<Field>().offset;
+		else if (name == "size")
+			return o.GetT<Field>().size;
+		else if (name == "metas")
+			return o.GetT<Field>().metas;
 		assert(0 && "No field of this name.");
 		return o;
 	}
 	template<> struct ClassInfo<Field>
 	{
-		inline static const constexpr char* GetClassNameT() { return "Field"; }
-		inline static const constexpr Field fields[4] =
+		inline static const constexpr char* GetClassName() { return "Field"; }
+		inline static const constexpr Field fields[6] =
 		{
-			{"name", "cstr", EClass, offsetof(Field, name)},
-			{"type", "cstr", EClass, offsetof(Field, type)},
-			{"flags", "uint32_t", EClass, offsetof(Field, flags)},
-			{"offset", ClassInfo<size_t>::GetClassNameT(), EClass, offsetof(Field, offset)},
+			{"name", "cstr", EClass | EAtomic, offsetof(Field, name), sizeof(const char*), {nullptr, 0} },
+			{"type", "cstr", EClass | EAtomic, offsetof(Field, type), sizeof(const char*), {nullptr, 0} },
+			{"flags", "uint32_t", EClass, offsetof(Field, flags), sizeof(uint32_t), {nullptr, 0} },
+			{"offset", ClassInfo<uint32_t>::GetClassName(),  EClass | EAtomic, offsetof(Field, offset), sizeof(uint32_t),{nullptr, 0}},
+			{"size", ClassInfo<uint32_t>::GetClassName(),  EClass | EAtomic, offsetof(Field, size), sizeof(std::uint32_t), {nullptr, 0}},
+			{"metas", "meta", EClass | EAtomic, offsetof(Field, metas), sizeof(const Meta*),
+				{nullptr, 0}}
 		};
 	};
 
@@ -386,7 +414,7 @@ namespace Sakura::refl
 	template<typename T>
 	struct DynSClass : IClass
 	{
-		virtual const char* GetName() const override final { return GetClassNameT<T>(); }
+		virtual const char* GetName() const override final { return GetClassName<T>(); }
 	};
 
 	template<typename T> struct SEnum : IEnum {};

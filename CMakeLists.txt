@@ -19,7 +19,7 @@ elseif(MSVC)
 	set(CLANG_INCLUDEDIR "D:/ToolSet/LLVM/llvm/tools/clang/include")
 	set(CLANG_LIBDIR "D:/ToolSet/LLVM/llvm/tools/clang/lib")
 endif()
-
+ 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake") 
 find_package(LibClang REQUIRED)
 include_directories(${CLANG_INCLUDEDIR}) 
