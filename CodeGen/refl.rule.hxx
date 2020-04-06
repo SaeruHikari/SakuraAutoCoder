@@ -14,6 +14,7 @@
 #include <string>
 #include <stdexcept>
 #include <type_traits>
+#include <map>
 #include <vector>
 #include <cassert>
 
@@ -23,6 +24,18 @@ namespace Sakura::refl
 	// C++17 and does not require stored objects to be copyable.
 
 	void NoOp(void*) {}
+
+	template<typename T, std::size_t N>
+	constexpr std::size_t arraySize(T(&)[N]) noexcept
+	{
+		return N;
+	}
+
+	constexpr std::size_t arraySize(nullptr_t nul) noexcept
+	{
+		return 0;
+	}
+
 	class Object final
 	{
 	public:
@@ -99,113 +112,96 @@ namespace Sakura::refl
 		virtual const char* GetName() const = 0;
 	};
 
-	enum class ETypes : uint8_t
+	enum EFlag : uint32_t
 	{
-		EFunction,
-		EMethod,
-		EClass,
-		EEnum
+		EFunction = 1,
+		EMethod = EFunction << 1,
+		EStruct = EMethod << 1,
+		EClass = EStruct << 1,
+		EEnum = EClass << 1,
+		EConst = EEnum << 1,
+		EPtr = EConst << 1,
+		EReference = EPtr << 1,
+		ETemplate = EReference << 1
 	};
+	using EFlags = uint32_t;
 
-	struct Parameter
+	void AtomicStream(const Reference& ref, const std::string& type)
 	{
-		std::string Name;
-		IType* Param;
-		ETypes Type;
-	};
-
-    struct IFunction : public IType
-    {
-		virtual int GetParameterCount() const = 0;
-		virtual Parameter GetReturnType() const = 0;
-		virtual Parameter GetParameter(int i) const = 0;
-
-		// Syntactic sugar for calling Invoke().
-		template <typename... Ts>
-		Object operator()(Ts&&... ts);
-
-		virtual Object Invoke(const std::vector<Object>& args) = 0;
-    };
-
-	class IMethod : public IType
-	{
-	public:
-		virtual int GetParameterCount() const = 0;
-		virtual Parameter GetReturnType() const = 0;
-		virtual Parameter GetParameter(int i) const = 0;
-
-		// Syntactic sugar for calling Invoke().
-		template <typename... Ts>
-		Object operator()(const Reference& o, Ts&&... ts);
-
-		virtual Object Invoke(
-			const Reference& o, const std::vector<Object>& args) = 0;
-	};
-
-	class IClass : public IType
-	{
-	public:
-		virtual int GetFieldCount() const = 0;
-		virtual Reference GetField(
-			const Reference& o, const std::string& name) const = 0;
-
-		virtual int GetStaticFieldCount() const = 0;
-		virtual Reference GetStaticField(const std::string& name) const = 0;
-
-		virtual int GetMethodCount() const = 0;
-		virtual std::vector<std::unique_ptr<IMethod>> GetMethod(
-			const std::string& name) const = 0;
-
-		virtual int GetStaticMethodCount() const = 0;
-		virtual std::vector<std::unique_ptr<IFunction>> GetStaticMethod(
-			const std::string& name) const = 0;
-	};
-
-	class IEnum : public IType
-	{
-	public:
-		virtual std::vector<std::string> GetStringValues() const = 0;
-		virtual std::vector<int> GetIntValues() const = 0;
-		virtual bool TryTranslate(const std::string& value, int& out) = 0;
-		virtual bool TryTranslate(int value, std::string& out) = 0;
-	};
-
+		if (type.starts_with("uint64"))
+			std::cout << ref.GetT<uint64_t>();
+		else if (type.starts_with("uint32"))
+			std::cout << ref.GetT<uint32_t>();
+		else if (type.starts_with("uint8"))
+			std::cout << ref.GetT<uint8_t>();
+		else if (type.starts_with("uint16"))
+			std::cout << ref.GetT<uint16_t>();
+		else if (type.starts_with("string"))
+			std::cout << ref.GetT<std::string>();
+		else if (type.starts_with("cstr"))
+			std::cout << ref.GetT<const char*>();
+	}
 
 	template<typename T>
 	inline static constexpr const char* GetClassNameT();
 	template<typename T>
 	inline static const Reference GetFieldT(const Reference& o, const std::string& fieldname);
+	template<typename T>
+	struct ClassInfo { inline static const constexpr nullptr_t fields = nullptr; };
+
+	struct Field
+	{
+		const char* name;
+		const char* type;
+		EFlags flags = 0;
+		std::size_t offset;
+	};
+	using Parameter = Field;
+
 
 	template<typename T>
 	struct SClass 
 	{
 		using ClassName = std::decay_t<T>;
-		inline static const constexpr char* GetName() { return GetClassNameT<ClassName>(); }
+		using ClassInfo = ClassInfo<ClassName>;
+		inline static const constexpr char* GetName() { return ClassInfo::GetClassNameT(); }
 		inline static const constexpr std::size_t id_ = 
 			_Fnv1a_append_bytes(Sakura::refl::_FNV_offset_basis,
-				GetClassNameT<ClassName>(), length(GetClassNameT<ClassName>()) * sizeof(char));
+				ClassInfo::GetClassNameT(), length(ClassInfo::GetClassNameT()) * sizeof(char));
 		inline static const constexpr std::size_t GetTypeId() { return id_; }
 		inline static const Reference GetField(const Reference& o, const std::string& fieldName)
 		{
 			return GetFieldT<ClassName>(o, fieldName);
 		}
-		inline static const constexpr std::size_t GetFieldCount() { return 1; }
-		inline static const constexpr std::size_t GetStaticFieldCount() { return 0; }
+		template<typename T>
+		inline static const T GetField(const Reference& o, const std::string& fieldName)
+		{
+			return GetFieldT<ClassName>(o, fieldName).GetT<T>();
+		}
+		inline static const constexpr std::size_t GetStaticFieldCount() noexcept
+		{
+			return 0; 
+		}
 		inline static const Reference GetStaticField(const Reference& o, const std::string& fieldName)
 		{
 			return Reference<nullptr_t>(nullptr);
 		}
+		inline static const Field GetFieldMeta(const std::string& name) noexcept
+		{
+			for (auto i = 0; i < GetFieldCount(); i++)
+			{
+				if (name == ClassInfo::fields[i].name)
+					return ClassInfo::fields[i];
+			}
+			const char* _n = name.c_str();
+			assert(0 && "No Field named" && _n);
+			return ClassInfo::fields[999999999];
+		} 
+		inline static const constexpr std::size_t GetFieldCount() noexcept
+		{
+			return arraySize(ClassInfo::fields);
+		}
 	};
-
-	template<typename T>
-	struct DynSClass : IClass
-	{
-		virtual const char* GetName() const override final { return GetClassNameT<T>(); }
-	};
-
-	template<typename T> struct SEnum : IEnum {};
-	template <typename T, T t> struct Function : IFunction {};
-	template <typename T, T t> struct Method : IMethod {};
 
 #if true
     inline constexpr static const size_t _FNV_offset_basis = 14695981039346656037ULL;
@@ -234,9 +230,12 @@ namespace Sakura::refl
 
     using namespace std;
 #define GEN_REFL_BASIC_TYPES_TWO_PARAM(T, NAME) \
-	template<> inline static constexpr const char* GetClassNameT<T>(){return #NAME;}\
-	template<> inline static const Reference GetFieldT<T>(const Reference& o, const std::string& fieldName){return o;}
-
+	template<> inline static const Reference GetFieldT<T>(const Reference& o, const std::string& fieldName){return o;}\
+	template<> struct ClassInfo<T> \
+	{\
+		inline static const constexpr char* GetClassNameT(){return #NAME;}\
+		inline static const constexpr Field fields[1] = { {"value", GetClassNameT<T>(), EClass, 0} };\
+	};
 
 #define GEN_REFL_BASIC_TYPES(T) GEN_REFL_BASIC_TYPES_TWO_PARAM(T, T)
 
@@ -255,6 +254,32 @@ namespace Sakura::refl
 	GEN_REFL_BASIC_TYPES_TWO_PARAM(string, string);
 	GEN_REFL_BASIC_TYPES_TWO_PARAM(pmr::string, string);
 	GEN_REFL_BASIC_TYPES_TWO_PARAM(std::byte, byte);
+	GEN_REFL_BASIC_TYPES_TWO_PARAM(const char*, cstr);
+
+	template<> inline static const Reference GetFieldT<Field>(const Reference& o, const std::string& name)
+	{
+		if (name == "type")
+			return o.GetT<Field>().type;
+		else if (name == "name")
+			return o.GetT<Field>().name;
+		else if (name == "offset")
+			return o.GetT<Field>().offset;
+		else if (name == "flags")
+			return o.GetT<Field>().flags;
+		assert(0 && "No field of this name.");
+		return o;
+	}
+	template<> struct ClassInfo<Field>
+	{
+		inline static const constexpr char* GetClassNameT() { return "Field"; }
+		inline static const constexpr Field fields[4] =
+		{
+			{"name", "cstr", EClass, offsetof(Field, name)},
+			{"type", "cstr", EClass, offsetof(Field, type)},
+			{"flags", "uint32_t", EClass, offsetof(Field, flags)},
+			{"offset", ClassInfo<size_t>::GetClassNameT(), EClass, offsetof(Field, offset)},
+		};
+	};
 
 	template <typename T>
 	auto constexpr GetTypeId()
@@ -301,4 +326,70 @@ namespace Sakura::refl
 	{
 		return (SClass<T>::GetTypeId() == id_);
 	}
+
+	struct IFunction : public IType
+	{
+		virtual int GetParameterCount() const = 0;
+		virtual Parameter GetReturnType() const = 0;
+		virtual Parameter GetParameter(int i) const = 0;
+
+		// Syntactic sugar for calling Invoke().
+		template <typename... Ts>
+		Object operator()(Ts&&... ts);
+
+		virtual Object Invoke(const std::vector<Object>& args) = 0;
+	};
+
+	class IMethod : public IType
+	{
+	public:
+		virtual int GetParameterCount() const = 0;
+		virtual Parameter GetReturnType() const = 0;
+		virtual Parameter GetParameter(int i) const = 0;
+
+		// Syntactic sugar for calling Invoke().
+		template <typename... Ts>
+		Object operator()(const Reference& o, Ts&&... ts);
+
+		virtual Object Invoke(
+			const Reference& o, const std::vector<Object>& args) = 0;
+	};
+
+	class IClass : public IType
+	{
+	public:
+		virtual int GetFieldCount() const = 0;
+		virtual Reference GetField(
+			const Reference& o, const std::string& name) const = 0;
+
+		virtual int GetStaticFieldCount() const = 0;
+		virtual Reference GetStaticField(const std::string& name) const = 0;
+
+		virtual int GetMethodCount() const = 0;
+		virtual std::vector<std::unique_ptr<IMethod>> GetMethod(
+			const std::string& name) const = 0;
+
+		virtual int GetStaticMethodCount() const = 0;
+		virtual std::vector<std::unique_ptr<IFunction>> GetStaticMethod(
+			const std::string& name) const = 0;
+	};
+
+	class IEnum : public IType
+	{
+	public:
+		virtual std::vector<std::string> GetStringValues() const = 0;
+		virtual std::vector<int> GetIntValues() const = 0;
+		virtual bool TryTranslate(const std::string& value, int& out) = 0;
+		virtual bool TryTranslate(int value, std::string& out) = 0;
+	};
+
+	template<typename T>
+	struct DynSClass : IClass
+	{
+		virtual const char* GetName() const override final { return GetClassNameT<T>(); }
+	};
+
+	template<typename T> struct SEnum : IEnum {};
+	template <typename T, T t> struct Function : IFunction {};
+	template <typename T, T t> struct Method : IMethod {};
 }
