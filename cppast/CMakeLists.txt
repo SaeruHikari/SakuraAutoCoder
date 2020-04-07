@@ -4,9 +4,9 @@
 
 cmake_minimum_required(VERSION 3.8)
 project(cppast VERSION 0.0)
-
+ 
 # options
-option(CPPAST_BUILD_TEST "whether or not to build the tests" OFF)
+option(CPPAST_BUILD_TEST "whether or not to build the tests" OFF) 
 option(CPPAST_BUILD_EXAMPLE "whether or not to build the examples" OFF)
 option(CPPAST_BUILD_TOOL "whether or not to build the tool" OFF)
 
@@ -39,7 +39,7 @@ endif()
 
 add_subdirectory(src)
 
-if(${build_test})
+if(${build_test}) 
     enable_testing()
     add_subdirectory(test)
 endif()

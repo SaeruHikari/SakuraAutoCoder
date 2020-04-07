@@ -1,21 +1,21 @@
-#include <iostream>
-#include "CodeGen/refl.rule.hxx"
+﻿#include <iostream>
+#include "include/refl.rule.hxx"
 
 using namespace Sakura::refl;
 
 struct [[component]] TestComponent
 {
-	[[meta("Fxxk ISO C++23")]] float attrib;
-	std::string name;
-	[[meta("Can't wait to use compile-time-reflection")]]
-	void Method(std::string inVal, TestComponent& inRef) {};
-	static float staticAttrib;
+	[[meta("SaeruHikari")]] float attrib = 123.f;
+	std::string name = "TestComp";
+	inline static const constexpr float staticAttrib = 155;
+	void Method() { std::cout << "TestMethod!"; };
 };
 
-struct TestComponentWrap
+struct [[component]] TestComponentWrap
 {
 	TestComponent comp;
-	float wtf;
+	inline static const TestComponent statComp = { 14221.f, "Stat" };
+	float wtf = 155.f;
 };
 
 template<>
@@ -25,24 +25,61 @@ struct ClassInfo<TestComponent>
 	{
 		return "TestComponent";
 	}
-	inline static const constexpr Meta::MetaPiece attrib_meta[2] = 
+	inline static const constexpr Meta::MetaPiece attrib_meta[1] =
 	{
-		{"meta", "Fxxk ISO C++23"},
-		{"meta", "Fxxk ISO C++23"}
+		{"meta", "SaeruHikari"}
 	};
+	inline static constexpr const auto attrib_tup = hana::make_tuple(
+		Field{
+			"attrib", "float", offsetof(TestComponent, attrib),
+			{attrib_meta}
+		}, &TestComponent::attrib);
+	inline static constexpr const auto name_tup = hana::make_tuple(
+		Field{
+			"name", "string", offsetof(TestComponent, name),
+			{nullptr}
+		}, &TestComponent::name);
+	inline static constexpr auto all_tup = hana::make_tuple(attrib_tup, name_tup);
+
+	inline static constexpr auto staticAttrib_tup = hana::make_tuple(Field{
+			"staticAttrib", "float", 0, {nullptr}
+		}, &TestComponent::name);
+	inline static constexpr auto all_static_tup = hana::make_tuple(staticAttrib_tup);
+
+	inline static constexpr auto Method_tup = hana::make_tuple(Field{
+			"Method", "void(TestComponent::*)()", 0, {nullptr}
+		}, &TestComponent::Method);
+	inline static constexpr auto all_method_tup = hana::make_tuple(Method_tup);
+
+	// Dynamic data
 	inline static const constexpr Field fields[2] =
 	{
-		//
 		{
-			"attrib", "float", EClass, offsetof(TestComponent, attrib), sizeof(float), 
-				{attrib_meta, Sakura::refl::arraySize(attrib_meta)}
+			"attrib", "float", offsetof(TestComponent, attrib),
+				{attrib_meta}
 		},
 		{
-			"name", "string", EClass, offsetof(TestComponent, name), sizeof(std::string),
-				{nullptr, 0}
+			"name", "string", offsetof(TestComponent, name), {nullptr}
 		}
 	};
 };
+
+template<>
+struct ClassInfo<TestComponentWrap>
+{
+	inline static constexpr const char* GetClassName()
+	{
+		return "TestComponentWrap";
+	}
+	inline static constexpr const auto wtf_tup = hana::make_tuple(Field{
+			"wtf", "float", offsetof(TestComponentWrap, wtf), {nullptr}
+		}, &TestComponentWrap::wtf);
+	inline static constexpr const auto comp_tup = hana::make_tuple(Field{
+			"comp", "TestComponent", offsetof(TestComponentWrap, comp), {nullptr}
+		}, &TestComponentWrap::comp);
+	inline static constexpr auto all_tup = hana::make_tuple(comp_tup, wtf_tup);
+};
+
 template<>
 inline static const Reference Sakura::refl::GetFieldT<TestComponent>(
 	const Reference& o, const std::string& name)
@@ -55,8 +92,6 @@ inline static const Reference Sakura::refl::GetFieldT<TestComponent>(
 	assert(0 && "No field of this name.");
 	return o;
 }
-
-
 
 void AtomicStream(const Reference& ref, const std::string& type)
 {
@@ -91,8 +126,8 @@ void printFieldMeta()
 	{
 		for (auto j = 0; j < SClass<Field>::GetFieldCount(); j++)
 		{
-			auto field = SClass<T>::ClassInfo::fields[i];
-			auto fieldfield = SClass<Field>::ClassInfo::fields[j];
+			auto field = SClass<T>::info::fields[i];
+			auto fieldfield = SClass<Field>::info::fields[j];
 			std::cout << fieldfield.name << ": ";
 			AtomicStream(SClass<Field>::GetField(field, fieldfield.name), fieldfield.type);
 			std::cout << std::endl;
@@ -104,5 +139,35 @@ void printFieldMeta()
 int main(void)
 {
 	printFieldMeta<TestComponent>();
+	TestComponent testComp;
+	TestComponentWrap testCompWrap;
+	SClass<std::decay<decltype(testComp)>::type>::ForEachField(testComp,
+		Sakura::overload(
+			[](const std::string& field, const Field& meta) {
+				std::cout << "string: " << meta.name << ": " << field << std::endl;
+			},
+			[](auto&& field, const Field& meta) {
+				std::cout << meta.name << ": " << field << std::endl;
+			}));
+	std::cout << std::endl << std::endl;
+	SClass<std::decay<decltype(testCompWrap)>::type>::ForEachFieldAtomic(testCompWrap,
+		Sakura::overload(
+			[](float field, const Field& meta) {
+				std::cout << meta.name << ": " << field << std::endl;
+			},
+			[](const std::string& field, const Field& meta) {
+				std::cout << meta.name << ": " << field << std::endl;
+			}));
+
+	SClass<std::decay<decltype(testComp)>::type>::ForEachMethod(testComp,
+		[&](auto&& method, const Field& meta)
+		{
+			if constexpr
+				(std::is_same<std::decay<decltype(method)>::type, void(TestComponent::*)()>())
+			{
+				std::cout << meta.name << ": " << meta.type << std::endl;
+				(testComp.*method)();
+			}
+		});
 	return 0;
 }
