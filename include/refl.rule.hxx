@@ -184,6 +184,7 @@ namespace Sakura::refl
 	{
 		inline static const constexpr char* GetClassName() { return "NULL"; }
 		inline static const constexpr nullptr_t fields = nullptr;
+		inline static constexpr auto all_static_tup = hana::make_tuple();
 	};
 	using namespace std;
 #define GEN_REFL_BASIC_TYPES_TWO_PARAM(T, NAME) \
@@ -193,6 +194,7 @@ namespace Sakura::refl
 	{\
 		inline static const constexpr char* GetClassName(){return #NAME;}\
 		inline static const constexpr Field fields[1] = { {"value", #NAME, 0, {nullptr}} };\
+		inline static constexpr auto all_static_tup = hana::make_tuple();\
 	};
 
 #define GEN_REFL_BASIC_TYPES(T) GEN_REFL_BASIC_TYPES_TWO_PARAM(T, T)
@@ -290,13 +292,33 @@ namespace Sakura::refl
 				{
 					using ClassName_C = std::decay_t<decltype(value.*(field_schema[1_c]))>;
 					if constexpr (!isAtomic<ClassName_C>() && atomic)
+					{
 						SClass<ClassName_C>::ForEachFieldAtomic(std::forward<ClassName_C>(value.*(field_schema[1_c])), fn);
+						SClass<ClassName_C>::ForEachStaticFieldAtomic(fn);
+					}
 					else
 					{
-						fn(std::forward<ClassName_C>(value.*(field_schema[1_c])), field_schema[0_c]);
+						fn(value.*(field_schema[1_c]), field_schema[0_c]);
 					}
 				});
 		}
+
+		template <bool atomic, typename Fn, typename Tuple>
+		inline static constexpr void __for_each_static_field_impl(Tuple&& tup, Fn&& fn)
+		{
+			detail::ForEachTuple(std::forward<Tuple>(tup),
+				[&fn](auto&& field_schema)
+				{
+					using ClassName_CS = std::decay_t<decltype(*(field_schema[1_c]))>;
+					if constexpr (!isAtomic<ClassName_CS>() && atomic)
+						SClass<ClassName_CS>::ForEachFieldAtomic(*(field_schema[1_c]), fn);
+					else
+					{
+						fn(*field_schema[1_c], field_schema[0_c]);
+					}
+				});
+		}
+
 		template <typename V, typename Fn>
 		inline static constexpr void ForEachField(V&& value, Fn&& fn)
 		{
@@ -307,16 +329,18 @@ namespace Sakura::refl
 		{
 			__for_each_field_impl<true>(info::all_tup, value, fn);
 		}
-		template <typename V, typename Fn>
-		inline static constexpr void ForEachStaticField(V&& value, Fn&& fn)
+
+		template <typename Fn>
+		inline static constexpr void ForEachStaticField(Fn&& fn)
 		{
-			__for_each_field_impl<false>(info::all_static_tup, value, fn);
+			__for_each_static_field_impl<false>(info::all_static_tup, fn);
 		}
-		template <typename V, typename Fn>
-		inline static constexpr void ForEachStaticFieldAtomic(V&& value, Fn&& fn)
+		template <typename Fn>
+		inline static constexpr void ForEachStaticFieldAtomic(Fn&& fn)
 		{
-			__for_each_field_impl<true>(info::all_static_tup, value, fn);
+			__for_each_static_field_impl<true>(info::all_static_tup, fn);
 		}
+
 		template <typename V, typename Fn>
 		inline static constexpr void ForEachMethod(V&& value, Fn&& fn)
 		{

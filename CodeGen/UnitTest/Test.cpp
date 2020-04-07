@@ -41,15 +41,12 @@ struct ClassInfo<TestComponent>
 		}, &TestComponent::name);
 	inline static constexpr auto all_tup = hana::make_tuple(attrib_tup, name_tup);
 
-	inline static constexpr auto staticAttrib_tup = hana::make_tuple(Field{
-			"staticAttrib", "float", 0, {nullptr}
-		}, &TestComponent::name);
-	inline static constexpr auto all_static_tup = hana::make_tuple(staticAttrib_tup);
-
 	inline static constexpr auto Method_tup = hana::make_tuple(Field{
 			"Method", "void(TestComponent::*)()", 0, {nullptr}
 		}, &TestComponent::Method);
 	inline static constexpr auto all_method_tup = hana::make_tuple(Method_tup);
+
+	//inline static constexpr auto 
 
 	// Dynamic data
 	inline static const constexpr Field fields[2] =
@@ -62,6 +59,7 @@ struct ClassInfo<TestComponent>
 			"name", "string", offsetof(TestComponent, name), {nullptr}
 		}
 	};
+	inline static constexpr auto all_static_tup = hana::make_tuple();
 };
 
 template<>
@@ -78,6 +76,11 @@ struct ClassInfo<TestComponentWrap>
 			"comp", "TestComponent", offsetof(TestComponentWrap, comp), {nullptr}
 		}, &TestComponentWrap::comp);
 	inline static constexpr auto all_tup = hana::make_tuple(comp_tup, wtf_tup);
+
+	inline static constexpr auto staticAttrib_tup = hana::make_tuple(Field{
+			"staticAttrib", "TestComponent", 0, {nullptr}
+		}, &TestComponentWrap::statComp);
+	inline static constexpr auto all_static_tup = hana::make_tuple(staticAttrib_tup);
 };
 
 template<>
@@ -158,6 +161,18 @@ int main(void)
 			[](const std::string& field, const Field& meta) {
 				std::cout << meta.name << ": " << field << std::endl;
 			}));
+
+
+	std::cout << std::endl << std::endl;
+	SClass<TestComponentWrap>::ForEachStaticFieldAtomic(
+		Sakura::overload(
+			[](float field, const Field& meta) {
+				std::cout << meta.name << ": " << field << std::endl;
+			},
+			[](const std::string& field, const Field& meta) {
+				std::cout << meta.name << ": " << field << std::endl;
+			}));
+
 
 	SClass<std::decay<decltype(testComp)>::type>::ForEachMethod(testComp,
 		[&](auto&& method, const Field& meta)
