@@ -29,10 +29,11 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
  
 #add_library(SReflRuntime STATIC lib/reflang.hpp lib/reflang.cpp)
 add_executable(
-	SReflCodeGen
+	SReflCodeGen 
 	SReflCodeGen.cpp
 	CodeGen/Refl/codegen.hpp
 	CodeGen/Refl/codegen.cpp
+	CodeGen/Refl/codegen.classmember.hpp
 	CodeGen/Refl/codegen.class.hpp
 	CodeGen/Refl/codegen.class.cpp
 	)

@@ -29,6 +29,28 @@ namespace Sakura::refl
 	class IType;
 }
 
+#define SFIELD_INFO(NAME, T, MOTHER_BOARD, ...) \
+	struct NAME##_info{\
+		constexpr NAME##_info() = default;\
+		Field fd = Field{\
+			#NAME, #T, offsetof(MOTHER_BOARD, NAME), __VA_ARGS__ };\
+		decltype(&MOTHER_BOARD::NAME) ptr = &MOTHER_BOARD::NAME;\
+	};
+
+#define SMETHOD_INFO(NAME, T, MOTHER_BOARD, ...) \
+	struct NAME##_info{\
+		constexpr NAME##_info() = default;\
+		Field fd = Field{#NAME, #T, 0, __VA_ARGS__ };\
+		decltype(&MOTHER_BOARD::NAME) ptr = &MOTHER_BOARD::NAME;\
+	};
+
+#define SSTATICFIELD_INFO(NAME, T, MOTHER_BOARD, ...)  \
+	struct NAME##_info{\
+		constexpr NAME##_info() = default;\
+		Field fd = Field{#NAME, #T, 0, __VA_ARGS__ };\
+		decltype(&MOTHER_BOARD::NAME) ptr = &MOTHER_BOARD::NAME;\
+	};
+
 namespace Sakura::refl
 {
 	// Object is a class similar in nature to std::any, only it does not require
@@ -190,11 +212,10 @@ namespace Sakura::refl
 	struct ClassInfo
 	{
 		inline static const constexpr char* GetClassName() { return "NULL"; }
-		inline static const constexpr nullptr_t fields = nullptr;
-		inline static constexpr auto all_static_tup = hana::make_tuple();
-		inline static constexpr const auto all_field() { return hana::make_tuple(); }
-		inline static constexpr auto all_method_tup = hana::make_tuple();
-		inline static constexpr auto all_static_method_tup = hana::make_tuple();
+		inline static constexpr const auto all_methods() { return hana::make_tuple(); }
+		inline static constexpr const auto all_fields() { return hana::make_tuple(); }
+		inline static constexpr const auto all_static_fields() { return hana::make_tuple(); }
+		inline static constexpr const auto all_static_methods() { return hana::make_tuple(); }
 	};
 
 	using namespace std;
@@ -204,10 +225,10 @@ namespace Sakura::refl
 	template<> struct ClassInfo<T>\
 	{\
 		inline static const constexpr char* GetClassName(){return #NAME;}\
-		inline static constexpr auto all_static_tup = hana::make_tuple();\
-		inline static constexpr const auto all_field() { return hana::make_tuple(); }\
-		inline static constexpr auto all_method_tup = hana::make_tuple();\
-		inline static constexpr auto all_static_method_tup = hana::make_tuple();\
+		inline static constexpr const auto all_fields() { return hana::make_tuple(); }\
+		inline static constexpr const auto all_static_fields() { return hana::make_tuple(); }\
+		inline static constexpr const auto all_methods() { return hana::make_tuple(); }\
+		inline static constexpr const auto all_static_methods() { return hana::make_tuple(); }\
 		inline static const constexpr Meta::MetaPiece meta[1] =\
 		{\
 			{"description", "Class of "#T}\
@@ -231,7 +252,7 @@ namespace Sakura::refl
 	GEN_REFL_BASIC_TYPES_TWO_PARAM(string, string);
 	GEN_REFL_BASIC_TYPES_TWO_PARAM(pmr::string, string);
 	GEN_REFL_BASIC_TYPES_TWO_PARAM(std::byte, byte);
-	GEN_REFL_BASIC_TYPES_TWO_PARAM(const char*, cstr);
+	GEN_REFL_BASIC_TYPES_TWO_PARAM(const char*, const char*);
 
 	template<> inline static const Reference GetFieldT<Field>(const Reference& o, const std::string& name)
 	{
@@ -253,50 +274,12 @@ namespace Sakura::refl
 		{
 			{"description", "Field Informations."}
 		};
-		inline static constexpr const auto name_tup = hana::make_tuple(Field{
-			"name", "cstr", offsetof(Field, name), {nullptr}
-			}, &Field::name);
-		inline static constexpr const auto type_tup = hana::make_tuple(Field{
-				"type", "cstr", offsetof(Field, type), {nullptr}
-			}, &Field::type);
-		inline static constexpr const auto offset_tup = hana::make_tuple(Field{
-				"offset", ClassInfo<uint32_t>::GetClassName(), offsetof(Field, offset), {nullptr}
-			}, &Field::offset);
-		inline static constexpr const auto metas_tup = hana::make_tuple(Field{
-				"metas", "meta", offsetof(Field, metas), {nullptr}
-			}, &Field::metas);
-		inline static constexpr auto all_tup = hana::make_tuple(name_tup, type_tup, offset_tup, metas_tup);
-
-		inline static constexpr const auto all_field()
+		inline static constexpr const auto all_fields()
 		{
-			struct name_info
-			{
-				constexpr name_info() = default;
-				Field fd = Field{
-					"name", "cstr", offsetof(Field, name), {nullptr} };
-				decltype(&Field::name) ptr = &Field::name;
-			};
-			struct type_info
-			{
-				constexpr type_info() = default;
-				Field fd = Field{
-					"type", "cstr", offsetof(Field, type), {nullptr} };
-				decltype(&Field::type) ptr = &Field::type;
-			};
-			struct offset_info
-			{
-				constexpr offset_info() = default;
-				Field fd = Field{
-					"offset", ClassInfo<uint32_t>::GetClassName(), offsetof(Field, offset), {nullptr} };
-				decltype(&Field::offset) ptr = &Field::offset;
-			};
-			struct metas_info
-			{
-				constexpr metas_info() = default;
-				Field fd = Field{
-					"metas", "meta", offsetof(Field, metas), {nullptr} };
-				decltype(&Field::metas) ptr = &Field::metas;
-			};
+			SFIELD_INFO(name, const char*, Field, nullptr)
+			SFIELD_INFO(type, const char*, Field, nullptr)
+			SFIELD_INFO(offset, uint32_t, Field, nullptr)
+			SFIELD_INFO(metas, meta, Field, nullptr)
 			return hana::make_tuple(name_info(), type_info(), offset_info(), metas_info());
 		}
 	};
@@ -357,7 +340,9 @@ namespace Sakura::refl
 					if constexpr (!isAtomic<ClassName_C>() && atomic)
 					{
 						SClass<ClassName_C>::ForEachFieldAtomic(std::forward<ClassName_C>(value.*(field_schema.ptr)), fn);
-						SClass<ClassName_C>::ForEachStaticFieldAtomic(fn);
+						constexpr int leng = hana::length(ClassInfo<ClassName_C>::all_static_fields());
+						if constexpr (leng > 0)
+							SClass<ClassName_C>::ForEachStaticFieldAtomic(fn);
 					}
 					else
 					{
@@ -372,12 +357,12 @@ namespace Sakura::refl
 			detail::ForEachTuple(std::forward<Tuple>(tup),
 				[&fn](auto&& field_schema)
 				{
-					using ClassName_CS = std::decay_t<decltype(*(field_schema[1_c]))>;
+					using ClassName_CS = std::decay_t<decltype(*(field_schema.ptr))>;
 					if constexpr (!isAtomic<ClassName_CS>() && atomic)
-						SClass<ClassName_CS>::ForEachFieldAtomic(*(field_schema[1_c]), fn);
+						SClass<ClassName_CS>::ForEachFieldAtomic(*(field_schema.ptr), fn);
 					else
 					{
-						fn(*field_schema[1_c], field_schema[0_c]);
+						fn(*field_schema.ptr, field_schema.fd);
 					}
 				});
 		}
@@ -385,62 +370,62 @@ namespace Sakura::refl
 		template <typename Fn>
 		inline static constexpr void ForEachFieldMeta(Fn&& fn)
 		{
-			__for_each_field_meta_impl<false>(info::all_field(), fn);
+			__for_each_field_meta_impl<false>(info::all_fields(), fn);
 		}
 		template <typename V, typename Fn>
 		inline static constexpr void ForEachField(V&& value, Fn&& fn)
 		{
-			__for_each_field_impl<false>(info::all_field(), value, fn);
+			__for_each_field_impl<false>(info::all_fields(), value, fn);
 		}
 		template <typename V, typename Fn>
 		inline static constexpr void ForEachFieldAtomic(V&& value, Fn&& fn)
 		{
-			__for_each_field_impl<true>(info::all_field(), value, fn);
+			__for_each_field_impl<true>(info::all_fields(), value, fn);
 		}
 
 		template <typename Fn>
 		inline static constexpr void ForEachStaticFieldMeta(Fn&& fn)
 		{
-			__for_each_field_meta_impl<false>(info::all_static_tup, fn);
+			__for_each_field_meta_impl<false>(info::all_static_fields(), fn);
 		}
 		template <typename Fn>
 		inline static constexpr void ForEachStaticField(Fn&& fn)
 		{
-			__for_each_static_field_impl<false>(info::all_static_tup, fn);
+			__for_each_static_field_impl<false>(info::all_static_fields(), fn);
 		}
 		template <typename Fn>
 		inline static constexpr void ForEachStaticFieldAtomic(Fn&& fn)
 		{
-			__for_each_static_field_impl<true>(info::all_static_tup, fn);
+			__for_each_static_field_impl<true>(info::all_static_fields(), fn);
 		}
 
 		template <typename Fn>
 		inline static constexpr void ForEachMethodMeta(Fn&& fn)
 		{
-			__for_each_field_meta_impl<false>(info::all_method_tup, fn);
+			__for_each_field_meta_impl<false>(info::all_methods(), fn);
 		}
 		template <typename V, typename Fn>
 		inline static constexpr void ForEachMethod(V&& value, Fn&& fn)
 		{
-			detail::ForEachTuple(info::all_method_tup,
+			detail::ForEachTuple(info::all_methods(),
 				[&value, &fn](auto&& field_schema)
 				{
-					fn(field_schema[1_c], field_schema[0_c]);
+					fn(field_schema.ptr, field_schema.fd);
 				});
 		}
 
 		template <typename Fn>
 		inline static constexpr void ForEachStaticMethodMeta(Fn&& fn)
 		{
-			__for_each_field_meta_impl<false>(info::all_static_method_tup, fn);
+			__for_each_field_meta_impl<false>(info::all_static_methods(), fn);
 		}
 		template <typename Fn>
 		inline static constexpr void ForEachStaticMethod(Fn&& fn)
 		{
-			detail::ForEachTuple(info::all_static_method_tup,
+			detail::ForEachTuple(info::all_static_methods(),
 				[&fn](auto&& field_schema)
 				{
-					fn(field_schema[1_c], field_schema[0_c]);
+					fn(field_schema.ptr, field_schema.fd);
 				});
 		}
 

@@ -3,35 +3,19 @@
 #include <cppast/cpp_class_template.hpp>
 #include <cppast/code_generator.hpp>
 #include "codegen.utils.hpp"
+#include "codegen.classmember.hpp"
+
 
 using namespace std;
 
 namespace Sakura::refl
 {
-	struct ReflField
-	{
-		Field field;
-		std::unordered_map<std::string, std::string> fieldMetas;
-	};
-	struct ReflUnit
-	{
-		std::string unitName;
-		std::unordered_map<std::string, std::string> unitMetas;
-		std::unordered_map<std::string, ReflField> fieldsMap;
-		std::unordered_map<std::string, ReflField> staticFieldsMap;
-		std::unordered_map<std::string, ReflField> methodsMap;
-		std::unordered_map<std::string, ReflField> staticMethodsMap;
-	};
-
 	namespace detail
 	{
 		bool generate_base_class(code_generator& generator, const cpp_base_class& base,
 			cpp_access_specifier_kind);
 		
 		static void gen_getClassName(code_generator::output& output, const cpp_class& c);
-
-		static void gen_meta(code_generator::output& output, std::string prefix,
-			const std::unordered_map<std::string, std::string>& data);
 
 		inline void write_template_arguments(
 			code_generator::output& output,

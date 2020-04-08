@@ -1,8 +1,10 @@
 #pragma once
 #include <cppast/cpp_entity_kind.hpp>
 #include <cppast/cpp_file.hpp>
+#include <cppast/cpp_member_variable.hpp>
+#include <cppast/cpp_class.hpp>
+#include <cppast/cpp_template.hpp>
 #include "include/refl.rule.hxx"
-
 
 namespace Sakura::refl
 {
@@ -21,6 +23,7 @@ namespace Sakura::refl
 	using cpp_template_specialization = cppast::cpp_template_specialization;
 	using cpp_template_argument = cppast::cpp_template_argument;
 	using output = code_generator::output;
+	using cpp_member_variable = cppast::cpp_member_variable;
 
 	namespace detail
 	{
