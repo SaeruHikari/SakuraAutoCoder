@@ -3,7 +3,6 @@
 // found in the top-level directory of this distribution.
 
 #include <iostream>
-
 #include "cppast/external/cxxopts/include/cxxopts.hpp"
 #include <cppast/code_generator.hpp>         // for generate_code()
 #include <cppast/cpp_entity_kind.hpp>        // for the cpp_entity_kind definition
@@ -13,6 +12,8 @@
 #include <cppast/visitor.hpp>         // for visit()
 #include "CodeGen/Refl/codegen.hpp"
 
+extern std::unordered_map<std::string, Sakura::refl::ReflUnit> ReflUnits = {};
+extern bool bDebugAST = false;
 
 // print help options
 void print_help(const cxxopts::Options& options)
@@ -31,23 +32,26 @@ void print_error(const std::string& msg)
 void print_entity(std::ostream& out, const cppast::cpp_entity& e)
 {
 	// print name and the kind of the entity
-	if (!e.name().empty())
-		out << e.name();
-	else
-		out << "<anonymous>";
-	out << " (" << cppast::to_string(e.kind()) << ")";
+	if (bDebugAST)
+	{
+		if (!e.name().empty())
+			out << e.name();
+		else
+			out << "<anonymous>";
+		out << " (" << cppast::to_string(e.kind()) << ")";
 
-	// print whether or not it is a definition
-	if (cppast::is_definition(e))
-		out << " [definition]";
+		// print whether or not it is a definition
+		if (cppast::is_definition(e))
+			out << " [definition]";
+	}
 
 	// print number of attributes
-	if (!e.attributes().empty())
+	if (e.attributes().empty())
 	{
 		out << "\n";
 		return;
 	}
-	else
+	else 
 	{
 		if (e.kind() == cppast::cpp_entity_kind::language_linkage_t)
 			// no need to print additional information for language linkages
@@ -57,7 +61,7 @@ void print_entity(std::ostream& out, const cppast::cpp_entity& e)
 			// cast to cpp_namespace
 			auto& ns = static_cast<const cppast::cpp_namespace&>(e);
 			// print whether or not it is inline
-			if (ns.is_inline())
+			if (ns.is_inline() && bDebugAST)
 				out << " [inline]";
 			out << '\n';
 		}
@@ -77,7 +81,7 @@ void print_entity(std::ostream& out, const cppast::cpp_entity& e)
 				code_generator(const cppast::cpp_entity& e)
 				{
 					// kickoff code generation here
-					//cppast::generate_code_custom(*this, e, Sakura::refl::generate_code_impl);
+					cppast::generate_code_custom(*this, e, Sakura::refl::generate_code_impl);
 				}
 
 				// return the result
@@ -124,7 +128,11 @@ void print_entity(std::ostream& out, const cppast::cpp_entity& e)
 
 			} generator(e);
 			// print generated code
-			out << ": `" << generator.str() << '`' << '\n';
+			if (bDebugAST)
+				out << ": `";
+			out << generator.str();
+			if (bDebugAST)
+				out << '`' << '\n';
 		}
 	}
 }
@@ -146,26 +154,27 @@ void print_ast(std::ostream& out, const cppast::cpp_file& file)
 			return true;
 		else if (info.event == cppast::visitor_info::container_entity_exit)
 		{
-			// we have visited all children of a container,
-			// remove prefix
-			prefix.pop_back();
-			prefix.pop_back();
+			if (bDebugAST)
+			{
+				prefix.pop_back();
+				prefix.pop_back();
+			}
 		}
 		else
 		{
-			out << prefix; // print prefix for previous entities
-			// calculate next prefix
-			if (info.last_child)
+			if (bDebugAST)
 			{
-				if (info.event == cppast::visitor_info::container_entity_enter)
-					prefix += "  ";
-				//out << "+-";
-			}
-			else
-			{
-				if (info.event == cppast::visitor_info::container_entity_enter)
-					prefix += "| ";
-				//out << "|-";
+				out << prefix;
+				if (info.last_child)
+				{
+					if (info.event == cppast::visitor_info::container_entity_enter)
+						prefix += "  ";
+				}
+				else
+				{
+					if (info.event == cppast::visitor_info::container_entity_enter)
+						prefix += "| ";
+				}
 			}
 			print_entity(out, e);
 		}
@@ -203,6 +212,7 @@ try
 		("version", "display version information and exit")
 		("v,verbose", "be verbose when parsing")
 		("fatal_errors", "abort program when a parser error occurs, instead of doing error correction")
+		("dbg", "print debug AST info")
 		("file", "the file that is being parsed (last positional argument)",
 			cxxopts::value<std::string>());
 	option_list.add_options("compilation")
@@ -229,6 +239,8 @@ try
 	option_list.parse_positional("file");
 
 	auto options = option_list.parse(argc, argv);
+	if (options.count("dbg"))
+		bDebugAST = true;
 	if (options.count("help"))
 		print_help(option_list);
 	else if (options.count("version"))

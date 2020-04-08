@@ -1,6 +1,7 @@
 #pragma once
 #include <cppast/cpp_entity_kind.hpp>
 #include <cppast/cpp_file.hpp>
+#include "include/refl.rule.hxx"
 
 
 namespace Sakura::refl
@@ -8,6 +9,8 @@ namespace Sakura::refl
 	using cpp_entity = cppast::cpp_entity;
 	using cpp_entity_kind = cppast::cpp_entity_kind;
 	using keyword = cppast::keyword;
+	using identifier = cppast::identifier;
+	using punctuation = cppast::punctuation;
 	using formatting_flags = cppast::formatting_flags;
 	using punctuation = cppast::punctuation;
 	using code_generator = cppast::code_generator;
@@ -55,6 +58,13 @@ namespace Sakura::refl
 			output.unindent();
 			output << keyword(to_string(access)) << punctuation(":");
 			output.indent();
+		}
+
+		inline void inline_static_const_constexpr(code_generator::output& output)
+		{
+			output << keyword("inline") << cppast::whitespace << keyword("static")
+				<< cppast::whitespace << keyword("const")
+				<< cppast::whitespace << keyword("constexpr") << cppast::whitespace;
 		}
 	}
 

@@ -11,12 +11,25 @@
 
 namespace Sakura::Test
 {
-    struct [[component]] TestComponent
-    {
-        [[norefl]] float attrib;
-        [[meta("Fxxk ISO C++23")]] std::string name;
-        [[meta("Can't wait to use compile-time-reflection")]]
-            void Method(std::string inVal, TestComponent& inRef);
-        static float staticAttrib;
-    };
+	struct [[component]] [[descriptions("This is a test component")]] TestComponent
+	{
+		[[meta("SaeruHikari")]]
+		float attrib = 123.f;
+
+		[[meta("Fxxk ISO C++23")]]
+		std::string name = "TestComp";
+
+		inline static const constexpr float staticAttrib = 155;
+
+		[[meta("Can't wait to use compile-time-reflection")]]
+		void Method(std::string inVal, TestComponent& inRef) {};
+	};
+
+	struct [[component]] TestComponentWrap
+	{
+		[[description("Test wrapping of reflection component")]]
+		TestComponent comp;
+		inline static const TestComponent statComp = { 14221.f, "Stat" };
+		float wtf = 155.f;
+	};
 }

@@ -16,6 +16,10 @@
 #include <cppast/cpp_token.hpp>
 #include <cppast/cpp_type_alias.hpp>
 #include <cppast/cpp_variable.hpp>
+#include <iostream>
+
+extern bool bDebugAST;
+extern std::unordered_map<std::string, Sakura::refl::ReflUnit> ReflUnits;
 
 namespace Sakura::refl
 {
@@ -49,76 +53,71 @@ namespace Sakura::refl
 			}
 			return static_cast<bool>(output);
 		}
+		
+		void gen_getClassName(code_generator::output& output, const cpp_class& c)
+		{
+			detail::inline_static_const_constexpr(output);
+			output << keyword("const") << cppast::whitespace << cppast::identifier("char*")
+				<< cppast::whitespace << identifier("GetClassName") << punctuation("()") << cppast::newl << cppast::punctuation("\n{\n");
+			output << cppast::punctuation("    ") << keyword("return") << cppast::whitespace <<
+				cppast::string_literal("\"") << cppast::string_literal(c.name()) 
+					<< cppast::string_literal("\"") << cppast::punctuation(";\n}\n");
+		}
+		
+		void gen_meta(code_generator::output& output, std::string prefix, const std::unordered_map<std::string, std::string>& data)
+		{
+			if (data.size() > 0)
+			{
+				detail::inline_static_const_constexpr(output);
+				output << identifier("Meta::MetaPiece") << cppast::whitespace << identifier(prefix + "meta") 
+					<< punctuation("[") << cppast::int_literal(std::to_string(data.size())) << punctuation("] = \n{");
+				for (auto iter = data.begin(); iter != data.end(); iter++)
+				{
+					output << punctuation("\n    {") << cppast::string_literal("\"" + iter->first + "\"")
+						<< punctuation(", ") << cppast::string_literal("\"" + iter->second + "\"") << punctuation("}");
+					if (++iter != data.end())
+						output << punctuation(",");
+					iter--;
+				}
+				output << punctuation("\n};\n");
+			}
+		}
 	}
 
 	bool generate_class(
 		std::function<bool(cppast::code_generator&,
 			const cpp_entity&, cpp_access_specifier_kind)> codegenImpl,
 		code_generator& generator, const cpp_class& c,
-		cpp_access_specifier_kind                                  cur_access,
+		cpp_access_specifier_kind cur_access,
 		type_safe::optional_ref<const cpp_template_specialization> spec)
 	{
 		using namespace cppast;
 		code_generator::output output(type_safe::ref(generator), type_safe::ref(c), cur_access);
+		ReflUnit reflUnit;
+		reflUnit.unitName = c.name();
+		for (auto i = 0; i < c.attributes().size(); i++)
+		{
+			std::pair<std::string, std::string> attrib{ c.attributes()[i].name() , "" };
+			if (c.attributes()[i].arguments().has_value())
+				attrib.second = c.attributes()[i].arguments().value().as_string();
+			reflUnit.unitMetas.insert(attrib);
+		}
+
 		if (output)
 		{
-			if (is_friended(c))
-				output << keyword("friend") << whitespace;
-			output << keyword(to_string(c.class_kind())) << whitespace;
-
 			output << identifier(c.semantic_scope());
-			if (spec)
+			if(reflUnit.unitMetas.find("component") != reflUnit.unitMetas.end())
 			{
-				output << spec.value().primary_template();
-				write_specialization_arguments(output, spec.value());
+				output << identifier("template<>\nClassInfo<" + c.name() + ">\n{\n");
 			}
-			else
+			detail::gen_getClassName(output, c);
+			detail::gen_meta(output, "", reflUnit.unitMetas);
+			for (auto& member : c)
 			{
-				output << identifier("template<>SClass<" + c.name() + "> final : public IClass{");
-			}
-
-			//if (c.is_final())
-			//	output << whitespace << keyword("final");
-
-			if (!output.generate_definition() || c.is_declaration())
-				output << /*punctuation(";") << */newl;
-			else
-			{
-				detail::write_bases(generator, output, c);
-				output << detail::opening_brace;
-				output.indent();
-
-				auto need_sep = false;
-				auto last_access = c.class_kind() == cpp_class_kind::class_t ? cpp_private : cpp_public;
-				auto last_written_access = last_access;
-				for (auto& member : c)
-				{
-					if (member.kind() == cpp_entity_kind::access_specifier_t)
-					{
-						auto& access = static_cast<const cpp_access_specifier&>(member);
-						last_access = access.access_specifier();
-					}
-					else if (output.options(member, last_access).is_set(code_generator::exclude))
-						continue;
-					else
-					{
-						if (need_sep)
-							output << newl;
-						if (last_access != last_written_access)
-						{
-							detail::write_access_specifier(output, last_access);
-							last_written_access = last_access;
-						}
-						need_sep = codegenImpl(generator, member, last_access);
-					}
-				}
-
-				output.container_end();
-
-				output.unindent();
-				output << punctuation("};") << newl;
+				output << cppast::identifier(member.name()) << cppast::newl;
 			}
 		}
+		ReflUnits[c.name()] = reflUnit;
 		return static_cast<bool>(output);
 	}
 }
