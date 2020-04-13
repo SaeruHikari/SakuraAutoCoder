@@ -10,7 +10,36 @@
 			"cmakeCommandArgs": "",
 			"buildCommandArgs": "-v",
 			"ctestCommandArgs": "",
-			"variables": []
+			"variables": [
+				{
+					"name": "CMAKE_BUILD_TYPE",
+					"value": "Debug",
+					"type": "STRING"
+				}
+			]
+		},
+		{
+			"name": "x64-Release",
+			"generator": "Ninja",
+			"configurationType": "Release",
+			"buildRoot": "${projectDir}\\out\\build\\${name}",
+			"installRoot": "${projectDir}\\out\\install\\${name}",
+			"cmakeCommandArgs": "",
+			"buildCommandArgs": "-v",
+			"ctestCommandArgs": "",
+			"inheritEnvironments": [ "msvc_x64" ],
+			"variables": [
+				{
+					"name": "TYPE_SAFE_ENABLE_ASSERTIONS",
+					"value": "True",
+					"type": "BOOL"
+				},
+				{
+					"name": "DEBUG_ASSERT_DISABLE",
+					"value": "False",
+					"type": "BOOL"
+				}
+			]
 		}
 	]
 }

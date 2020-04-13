@@ -1,95 +1,8 @@
 ﻿#include <iostream>
 #include "include/refl.rule.hxx"
+#include "component.refl.hxx"
 
 using namespace Sakura::refl;
-
-struct [[component]][[descriptions("This is a test component")]] TestComponent
-{
-	[[meta("SaeruHikari")]] float attrib = 123.f;
-	std::string name = "TestComp";
-	inline static const constexpr float staticAttrib = 155;
-	void Method() { std::cout << "TestMethod!"; };
-};
-
-struct [[component]] TestComponentWrap
-{
-	TestComponent comp;
-	TestComponent* compPtr;
-	inline static const TestComponent statComp = { 14221.f, "Stat" };
-	float wtf = 155.f;
-};
-
-template<>
-struct ClassInfo<TestComponent>
-{
-	inline static constexpr const char* GetClassName()
-	{
-		return "TestComponent";
-	}
-
-	inline static const constexpr Meta::MetaPiece meta[1] =
-	{
-		{"descriptions", "This is a test component."}
-	};
-	inline static const constexpr Meta::MetaPiece attrib_meta[1] =
-	{
-		{"meta", "SaeruHikari"}
-	};
-
-	inline static constexpr const auto all_methods()
-	{
-		SMETHOD_INFO(Method, void(TestComponent::*)(), TestComponent, nullptr);
-		return hana::make_tuple(Method_info());
-	}
-	inline static constexpr const auto all_fields()
-	{
-		SFIELD_INFO(attrib, float, TestComponent, attrib_meta);
-		SFIELD_INFO(name, const char*, TestComponent, nullptr);
-		return hana::make_tuple(attrib_info(), name_info());
-	}
-	inline static constexpr const auto all_static_fields()
-	{
-		SSTATICFIELD_INFO(staticAttrib, float, TestComponent, nullptr)
-		return hana::make_tuple(staticAttrib_info());
-	}
-	inline static constexpr const auto all_static_methods()
-	{
-		return hana::make_tuple();
-	}
-};
-
-
-template<>
-struct ClassInfo<TestComponentWrap>
-{
-	inline static constexpr const char* GetClassName()
-	{
-		return "TestComponentWrap";
-	}
-
-	inline static const constexpr Meta::MetaPiece meta[1] =
-	{
-		{"descriptions", "This is a test component."}
-	};
-
-	inline static constexpr const auto all_fields()
-	{
-		SFIELD_INFO(comp, TestComponent, TestComponentWrap, nullptr);
-		SFIELD_INFO(wtf, float, TestComponentWrap, meta)
-		SFIELD_INFO(compPtr, TestComponent*, TestComponentWrap, nullptr)
-		return hana::make_tuple(comp_info(), wtf_info(), compPtr_info());
-	}
-
-	inline static constexpr const auto all_static_fields()
-	{
-		SSTATICFIELD_INFO(statComp, TestComponent, TestComponentWrap, nullptr)
-		return hana::make_tuple(statComp_info());
-	}
-	inline static constexpr const auto all_static_methods()
-	{
-		return hana::make_tuple();
-	}
-};
 
 template<>
 inline static const Reference Sakura::refl::GetFieldT<TestComponent>(
@@ -184,7 +97,7 @@ int main(void)
 			[](const std::string& field, const Field& meta) {
 				std::cout << meta.name << ": " << field << std::endl;
 			}));
-
+	
 	SClass<std::decay<decltype(testComp)>::type>::ForEachMethod(testComp,
 		[&](auto&& method, const Field& meta)
 		{

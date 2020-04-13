@@ -199,15 +199,17 @@ namespace detail
             return DEBUG_ASSERT_MARK_UNREACHABLE, *static_cast<T*>(nullptr);
         }
     };
-
+#ifdef _MSC_VER
+#    pragma warning(disable : 4702)
+#endif
     //=== assert implementation ===//
     // function name will be shown on constexpr assertion failure
     template <class Handler, typename... Args>
-    regular_void debug_assertion_failed(const source_location& loc, const char* expression,
-                                        Args&&... args)
+    regular_void debug_assertion_failed(const source_location& loc,
+        const char* expression, Args&&... args)
     {
-        return Handler::handle(loc, expression, detail::forward<Args>(args)...), std::abort(),
-               regular_void();
+        return Handler::handle(loc, expression,
+                detail::forward<Args>(args)...), std::abort(), regular_void();
     }
 
     // use enable if instead of tag dispatching

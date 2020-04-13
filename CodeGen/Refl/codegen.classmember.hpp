@@ -34,7 +34,11 @@ namespace Sakura::refl
 				for (auto iter = data.begin(); iter != data.end(); iter++)
 				{
 					output << punctuation("\n    {") << cppast::string_literal("\"" + iter->first + "\"")
-						<< punctuation(", ") << cppast::string_literal("\"" + iter->second + "\"") << punctuation("}");
+						<< punctuation(", ") 
+						<< ((iter->second.size() > 0) ?
+						cppast::string_literal(iter->second) : 
+						cppast::string_literal("\"null\""))
+						<< punctuation("}");
 					if (++iter != data.end())
 						output << punctuation(",");
 					iter--;
@@ -52,11 +56,10 @@ namespace Sakura::refl
 
 	using cpp_member_variable = cppast::cpp_member_variable;
 
-	inline bool generate_refl_class_member_varable(code_generator::output& output,
+	inline bool generate_meta_class_member_varable(code_generator::output& output,
 		const cpp_member_variable& var, const ReflField& field)
 	{
 		detail::generate_var_meta(output, var, field);
-
 		output << cppast::punctuation("\n");
 		return true;
 	}

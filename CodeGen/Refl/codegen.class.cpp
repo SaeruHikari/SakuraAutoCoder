@@ -63,13 +63,76 @@ namespace Sakura::refl
 					<< cppast::string_literal("\"") << cppast::punctuation(";\n}\n");
 		}
 		
-		void gen_all_fields(code_generator::output& output, const ReflUnit& unit)
+		enum FieldSet
 		{
-			inline_static_const_constexpr(output);
-			output << cppast::identifier("all_fields") << cppast::punctuation("()\n{\n");
-			for (auto iter = unit.fieldsMap.begin(); iter != unit.fieldsMap.end(); iter++)
+			E_FIELDS,
+			E_STATIC_FIELDS,
+			E_METHODS,
+			E_STATIC_METHODS
+		};
+
+		std::string GetMetaGetterName(FieldSet set)
+		{
+			switch (set)
 			{
-				output << punctuation("    ") << cppast::identifier("SFIELD_INFO") << cppast::punctuation("(")
+			case Sakura::refl::detail::E_FIELDS:
+				return "all_fields";
+			case Sakura::refl::detail::E_STATIC_FIELDS:
+				return "all_static_fields";
+			case Sakura::refl::detail::E_METHODS:
+				return "all_methods";
+			case Sakura::refl::detail::E_STATIC_METHODS:
+				return "all_static_methods";
+			default:
+				break;
+			}
+		}
+
+		std::string GetMetaMacroGenName(FieldSet set)
+		{
+			switch (set)
+			{
+			case Sakura::refl::detail::E_FIELDS:
+				return "SFIELD_INFO";
+			case Sakura::refl::detail::E_STATIC_FIELDS:
+				return "SSTATICFIELD_INFO";
+			case Sakura::refl::detail::E_STATIC_METHODS:
+			case Sakura::refl::detail::E_METHODS:
+				return "SMETHOD_INFO";
+			default:
+				break;
+			}
+		}
+
+		auto& GetFieldMap(const ReflUnit& unit, FieldSet set)
+		{
+			switch (set)
+			{
+			case Sakura::refl::detail::E_FIELDS:
+				return unit.fieldsMap;
+			case Sakura::refl::detail::E_STATIC_FIELDS:
+				return unit.staticFieldsMap;
+			case Sakura::refl::detail::E_STATIC_METHODS:
+				return unit.staticMethodsMap;
+			case Sakura::refl::detail::E_METHODS:
+				return unit.methodsMap;
+			default:
+				break;
+			}
+		}
+
+		void gen_all_fields(code_generator::output& output, const ReflUnit& unit,
+			FieldSet fieldSet)
+		{
+			auto fields = GetFieldMap(unit, fieldSet);
+			if (fields.size() <= 0)
+				return;
+			inline_static_const_constexpr(output);
+			output << cppast::keyword("auto") << cppast::punctuation(" ")
+				<< cppast::identifier(GetMetaGetterName(fieldSet)) << cppast::punctuation("()\n{\n");
+			for (auto iter = fields.begin(); iter != fields.end(); iter++)
+			{
+				output << punctuation("    ") << cppast::identifier(GetMetaMacroGenName(fieldSet)) << cppast::punctuation("(")
 					<< identifier(iter->first) << punctuation(", ")
 					<< identifier(iter->second.type) << punctuation(", ")
 					<< identifier(unit.unitName) << punctuation(", ");
@@ -81,14 +144,71 @@ namespace Sakura::refl
 			}
 			output << punctuation("    ") << keyword("return") << punctuation(" ")
 				<< identifier("hana::make_tuple") << punctuation("(");
-			for (auto iter = unit.fieldsMap.begin(); iter != unit.fieldsMap.end(); iter++)
+			for (auto iter = fields.begin(); iter != fields.end(); iter++)
 			{
 				output << identifier(iter->first + "_info()");
-				if(++iter != unit.fieldsMap.end())
+				if(++iter != fields.end())
 					output << punctuation(", ");
 				else
 					output << punctuation(");\n}\n");
 				iter--;
+			}
+		}
+
+		void collect_field_meta(ReflField& field, const cppast::cpp_entity& member)
+		{
+			field.name = member.name().c_str();
+			field.type
+				= cppast::to_string(((const cpp_member_variable&)member).type());
+			for (auto i = 0; i < member.attributes().size(); i++)
+			{
+				std::pair<std::string, std::string> attrib{ member.attributes()[i].name() , "" };
+				if (member.attributes()[i].arguments().has_value())
+					attrib.second = member.attributes()[i].arguments().value().as_string();
+				field.fieldMetas.insert(attrib);
+			}
+		}
+
+		void collect_static_field_meta(ReflField& field, const cppast::cpp_entity& member)
+		{
+			field.name = member.name().c_str();
+			field.type
+				= cppast::to_string(((const cppast::cpp_variable&)member).type());
+			for (auto i = 0; i < member.attributes().size(); i++)
+			{
+				std::pair<std::string, std::string> attrib{ member.attributes()[i].name() , "" };
+				if (member.attributes()[i].arguments().has_value())
+					attrib.second = member.attributes()[i].arguments().value().as_string();
+				field.fieldMetas.insert(attrib);
+			}
+		}
+
+		void collect_method_meta(ReflField& field, const cppast::cpp_entity& member)
+		{
+			field.name = member.name().c_str();
+			field.type = "method";
+			//field.type
+			//	= cppast::to_string(((const cppast::cpp_member_function&)member).);
+			for (auto i = 0; i < member.attributes().size(); i++)
+			{
+				std::pair<std::string, std::string> attrib{ member.attributes()[i].name() , "" };
+				if (member.attributes()[i].arguments().has_value())
+					attrib.second = member.attributes()[i].arguments().value().as_string();
+				field.fieldMetas.insert(attrib);
+			}
+		}
+
+		void collect_static_method_meta(ReflField& field, const cppast::cpp_entity& member)
+		{
+			field.name = member.name().c_str();
+			field.type = "static_method";
+			//	= cppast::to_string(((const cppast::cpp_member_function&)member).);
+			for (auto i = 0; i < member.attributes().size(); i++)
+			{
+				std::pair<std::string, std::string> attrib{ member.attributes()[i].name() , "" };
+				if (member.attributes()[i].arguments().has_value())
+					attrib.second = member.attributes()[i].arguments().value().as_string();
+				field.fieldMetas.insert(attrib);
 			}
 		}
 	}
@@ -115,9 +235,9 @@ namespace Sakura::refl
 				reflUnit.unitMetas.insert(attrib);
 			}
 			output << identifier(c.semantic_scope());
-			if(reflUnit.unitMetas.find("component") != reflUnit.unitMetas.end())
+			if(reflUnit.unitMetas.find("refl") != reflUnit.unitMetas.end())
 			{
-				output << identifier("template<>\nClassInfo<" + c.name() + ">\n{\n");
+				output << identifier("template<>\nstruct ClassInfo<" + c.name() + ">\n{\n");
 			}
 			detail::gen_getClassName(output, c);
 			detail::gen_meta(output, "", reflUnit.unitMetas);
@@ -127,23 +247,34 @@ namespace Sakura::refl
 			{
 				if (member.kind() == cpp_entity_kind::member_variable_t)
 				{
-					reflUnit.fieldsMap[member.name()].name = member.name().c_str();
-					cppast::detail::write_type(output, ((const cpp_member_variable&)member).type(), member.name());
-					reflUnit.fieldsMap[member.name()].type 
-						= cppast::to_string(((const cpp_member_variable&)member).type());
-					for (auto i = 0; i < member.attributes().size(); i++)
-					{
-						std::pair<std::string, std::string> attrib{ member.attributes()[i].name() , "" };
-						if (member.attributes()[i].arguments().has_value())
-							attrib.second = member.attributes()[i].arguments().value().as_string();
-						reflUnit.fieldsMap[member.name()].fieldMetas.insert(attrib);
-					}
-					generate_refl_class_member_varable(output, ((const cpp_member_variable&)member),
+					detail::collect_field_meta(reflUnit.fieldsMap[member.name()], member);
+					generate_meta_class_member_varable(output, ((const cpp_member_variable&)member),
 						reflUnit.fieldsMap[member.name()]);
 				}
+				else if (member.kind() == cpp_entity_kind::variable_t)
+				{
+					detail::collect_static_field_meta(reflUnit.staticFieldsMap[member.name()], member);
+					generate_meta_class_member_varable(output, ((const cpp_member_variable&)member),
+						reflUnit.staticFieldsMap[member.name()]);
+				}
+				else if (member.kind() == cpp_entity_kind::member_function_t)
+				{
+					detail::collect_method_meta(reflUnit.methodsMap[member.name()], member);
+					generate_meta_class_member_varable(output, ((const cpp_member_variable&)member),
+						reflUnit.methodsMap[member.name()]);
+				}
+				else if (member.kind() == cpp_entity_kind::function_t)
+				{
+					detail::collect_static_method_meta(reflUnit.methodsMap[member.name()], member);
+					generate_meta_class_member_varable(output, ((const cpp_member_variable&)member),
+						reflUnit.methodsMap[member.name()]);
+				}
 			}
-
-			detail::gen_all_fields(output, reflUnit);
+			detail::gen_all_fields(output, reflUnit, detail::FieldSet::E_FIELDS);
+			detail::gen_all_fields(output, reflUnit, detail::FieldSet::E_STATIC_FIELDS);
+			detail::gen_all_fields(output, reflUnit, detail::FieldSet::E_METHODS);
+			detail::gen_all_fields(output, reflUnit, detail::FieldSet::E_STATIC_METHODS);
+			output << punctuation("\n};\n");
 		}
 		ReflUnits[c.name()] = reflUnit;
 		return static_cast<bool>(output);

@@ -217,6 +217,14 @@ namespace Sakura::refl
 		inline static constexpr const auto all_static_fields() { return hana::make_tuple(); }
 		inline static constexpr const auto all_static_methods() { return hana::make_tuple(); }
 	};
+	template<typename T>
+	struct EnumInfo
+	{
+		inline static const constexpr char* GetEnumName() { return "NULL"; }
+		//inline static const constexpr Meta::MetaPiece meta = {...};
+		//inline static const constexpr Meta::MetaPiece meta_EONE = {...}; 
+		//inline static constexpr Meta perMeta[n] = {...};
+	};
 
 	using namespace std;
 #define GEN_REFL_BASIC_TYPES_TWO_PARAM(T, NAME) \

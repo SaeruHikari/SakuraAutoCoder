@@ -6,6 +6,7 @@ enable_testing()
 add_subdirectory(cppast)
 
 include_directories(${CMAKE_SOURCE_DIR}) 
+include_directories(include) 
  
 set(CMAKE_C_STANDARD 11) 
 set(CMAKE_CXX_STANDARD 20)
