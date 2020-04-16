@@ -12,6 +12,8 @@
 *.generated.h
 */out
 /out
+*/.DS_Store
+.DS_Store
 #
 *.jpg
 *.png

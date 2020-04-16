@@ -114,7 +114,6 @@ function(_cppast_find_llvm_config)
     else()
         find_program(llvm_config_binary_no_suffix llvm-config)
         find_program(llvm_config_binary_suffix NAMES llvm-config-7 llvm-config-6.0 llvm-config-5.0 llvm-config-4.0)
-
         if(NOT llvm_config_binary_no_suffix)
             set(LLVM_CONFIG_BINARY ${llvm_config_binary_suffix} CACHE INTERNAL "")
         elseif(NOT llvm_config_binary_suffix)

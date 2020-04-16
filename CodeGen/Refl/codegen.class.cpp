@@ -144,14 +144,15 @@ namespace Sakura::refl
 			}
 			output << punctuation("    ") << keyword("return") << punctuation(" ")
 				<< identifier("hana::make_tuple") << punctuation("(");
+			auto i = 0u;
 			for (auto iter = fields.begin(); iter != fields.end(); iter++)
 			{
+				i++;
 				output << identifier(iter->first + "_info()");
-				if(++iter != fields.end())
+				if(i != fields.size())
 					output << punctuation(", ");
 				else
 					output << punctuation(");\n}\n");
-				iter--;
 			}
 		}
 

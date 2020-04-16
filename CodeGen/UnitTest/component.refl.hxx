@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2020-04-04 11:12:12
- * @LastEditTime: 2020-04-13 10:22:20
+ * @LastEditTime: 2020-04-16 22:26:35
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \undefinedd:\Coding\SakuraAutoCoder\CodeGen\component.refl.hxx
@@ -39,4 +39,4 @@ enum class [[refl]] TestEnum : uint8_t
 	E_THREE
 };
 
-#include "component.generated.hxx"
+#include "component.gen.hxx"

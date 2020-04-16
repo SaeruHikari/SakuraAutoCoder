@@ -3,9 +3,9 @@
 #include "component.refl.hxx"
 
 using namespace Sakura::refl;
-
+/*
 template<>
-inline static const Reference Sakura::refl::GetFieldT<TestComponent>(
+inline const Reference Sakura::refl::GetFieldT<TestComponent>(
 	const Reference& o, const std::string& name)
 {
 	auto ref = o.GetT<TestComponent>();
@@ -19,6 +19,7 @@ inline static const Reference Sakura::refl::GetFieldT<TestComponent>(
 
 void AtomicStream(const Reference& ref, const std::string& type)
 {
+	
 	if (type.starts_with("uint64"))
 		std::cout << ref.GetT<uint64_t>();
 	else if (type.starts_with("uint32"))
@@ -46,7 +47,7 @@ void AtomicStream(const Reference& ref, const std::string& type)
 template<typename T>
 void printFieldMeta()
 {
-	SClass<std::decay<T>::type>::ForEachFieldMeta(
+	SClass<typename std::decay<T>::type>::ForEachFieldMeta(
 			[](const Field& field)
 			{
 				SClass<Field>::ForEachField(field,
@@ -58,11 +59,11 @@ void printFieldMeta()
 						std::cout << std::endl;
 					});
 			});
-}
+}*/
 
 int main(void)
 {
-	printFieldMeta<TestComponentWrap>();
+	//printFieldMeta<TestComponentWrap>();
 	TestComponent testComp;
 
 	TestComponentWrap testCompWrap;
@@ -102,7 +103,7 @@ int main(void)
 		[&](auto&& method, const Field& meta)
 		{
 			if constexpr
-				(std::is_same<std::decay<decltype(method)>::type, void(TestComponent::*)()>())
+				(std::is_same<typename std::decay<decltype(method)>::type, void(TestComponent::*)()>())
 			{
 				std::cout << meta.name << ": " << meta.type << std::endl;
 				(testComp.*method)();

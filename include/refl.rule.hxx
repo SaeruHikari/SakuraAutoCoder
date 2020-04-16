@@ -1,7 +1,7 @@
 ﻿/*
  * @Author: your name
  * @Date: 2020-04-04 12:32:09
- * @LastEditTime: 2020-04-04 13:47:49
+ * @LastEditTime: 2020-04-16 22:31:47
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \undefinedd:\Coding\SakuraAutoCoder\CodeGen\refl.rule.hxx
@@ -21,6 +21,11 @@
 #include "boost/hana.hpp"
 namespace hana = boost::hana;
 using namespace hana::literals;
+using namespace std;
+namespace std::pmr
+{
+	struct string;
+}
 
 namespace Sakura::refl
 {
@@ -129,7 +134,7 @@ namespace Sakura::refl
 			return N;
 		}
 
-		constexpr std::size_t arraySize(nullptr_t nul) noexcept
+		constexpr std::size_t arraySize(std::nullptr_t nul) noexcept
 		{
 			return 0;
 		}
@@ -157,7 +162,7 @@ namespace Sakura::refl
 		{
 
 		}
-		constexpr Meta(const nullptr_t npt)
+		constexpr Meta(const std::nullptr_t npt)
 		{
 
 		}
@@ -181,6 +186,8 @@ namespace Sakura::refl
 		template<typename T>
 		constexpr Reference(T& t);
 
+		constexpr Reference();
+
 		Reference(const Reference& o) = default;
 		Reference& operator=(const Reference& o) = default;
 
@@ -199,7 +206,7 @@ namespace Sakura::refl
 
 	// Dynamic Part
 	template<typename T>
-	inline static const Reference GetFieldT(const Reference& o, const std::string& fieldname);
+	inline static const Reference GetFieldT(const Reference& o, const std::string& fieldname){assert(0); return Reference();};
 
 	template<typename T,
 		std::enable_if_t<!std::is_pointer_v<T>, int> = 0>
@@ -228,8 +235,8 @@ namespace Sakura::refl
 
 	using namespace std;
 #define GEN_REFL_BASIC_TYPES_TWO_PARAM(T, NAME) \
-	template<> inline static const Reference GetFieldT<T>(const Reference& o, const std::string& fieldName){return o;}\
-	template<> inline static const constexpr bool isAtomic<T>(){return true;}\
+	template<> inline const Reference GetFieldT<T>(const Reference& o, const std::string& fieldName){return o;}\
+	template<> inline const constexpr bool isAtomic<T>(){return true;}\
 	template<> struct ClassInfo<T>\
 	{\
 		inline static const constexpr char* GetClassName(){return #NAME;}\
@@ -242,6 +249,7 @@ namespace Sakura::refl
 			{"description", "Class of "#T}\
 		};\
 	};
+
 
 #define GEN_REFL_BASIC_TYPES(T) GEN_REFL_BASIC_TYPES_TWO_PARAM(T, T)
 
@@ -262,19 +270,7 @@ namespace Sakura::refl
 	GEN_REFL_BASIC_TYPES_TWO_PARAM(std::byte, byte);
 	GEN_REFL_BASIC_TYPES_TWO_PARAM(const char*, const char*);
 
-	template<> inline static const Reference GetFieldT<Field>(const Reference& o, const std::string& name)
-	{
-		if (name == "name")
-			return o.GetT<Field>().name;
-		else if (name == "type")
-			return o.GetT<Field>().type;
-		else if (name == "offset")
-			return o.GetT<Field>().offset;
-		else if (name == "metas")
-			return o.GetT<Field>().metas;
-		assert(0 && "No field of this name.");
-		return o;
-	}
+
 	template<> struct ClassInfo<Field>
 	{
 		inline static const constexpr char* GetClassName() { return "Field"; }
@@ -291,6 +287,20 @@ namespace Sakura::refl
 			return hana::make_tuple(name_info(), type_info(), offset_info(), metas_info());
 		}
 	};
+
+	template<> inline const Reference GetFieldT<Field>(const Reference& o, const std::string& name)
+	{
+		if (name == "name")
+			return o.GetT<Field>().name;
+		else if (name == "type")
+			return o.GetT<Field>().type;
+		else if (name == "offset")
+			return o.GetT<Field>().offset;
+		else if (name == "metas")
+			return o.GetT<Field>().metas;
+		assert(0 && "No field of this name.");
+		return o;
+	}
 
 	template<typename T>
 	struct SClass
@@ -309,7 +319,7 @@ namespace Sakura::refl
 		}
 		inline static const Reference GetStaticField(const Reference& o, const std::string& fieldName)
 		{
-			return Reference<nullptr_t>(nullptr);
+			return Reference();
 		}
 		inline static const Field GetFieldMeta(const std::string& name) noexcept
 		{
@@ -443,10 +453,17 @@ namespace Sakura::refl
 		{
 			return GetFieldT<ClassName>(o, fieldName);
 		}
-		template<typename T>
-		inline static const T GetField(const Reference& o, const std::string& fieldName)
+/*
+		template <typename T>
+		T& GetT() const
 		{
-			return GetFieldT<ClassName>(o, fieldName).GetT<T>();
+			return *static_cast<T*>(data_);
+		}
+*/
+		template<typename TT>
+		inline static const TT GetField(const Reference& o, const std::string& fieldName)
+		{
+			return *static_cast<TT*>(GetFieldT<ClassName>(o, fieldName).data_);
 		}
 	};
 
@@ -566,6 +583,12 @@ namespace Sakura::refl
 		, data_((void*)&t)
 	{
 
+	}
+
+	inline constexpr Reference::Reference()
+		: id_(GetTypeId<std::nullptr_t>()), data_(nullptr)
+	{
+			
 	}
 
 	template <typename T>

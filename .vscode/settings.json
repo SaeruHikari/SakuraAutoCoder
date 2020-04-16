@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "__nullptr": "cpp",
+        "iosfwd": "cpp"
+    }
+}

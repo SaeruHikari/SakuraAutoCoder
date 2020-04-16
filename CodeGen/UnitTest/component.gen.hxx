@@ -11,8 +11,8 @@ inline static const constexpr const char* GetClassName()
 }
 inline static const constexpr Meta::MetaPiece meta[2] = 
 {
-    {"refl", "null"},
-    {"descriptions", "This is a test component"}
+    {"descriptions", "This is a test component"},
+    {"refl", "null"}
 };
 inline static const constexpr Meta::MetaPiece attrib_meta[1] = 
 {

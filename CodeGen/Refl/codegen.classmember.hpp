@@ -1,3 +1,11 @@
+/*
+ * @Author: your name
+ * @Date: 2020-04-16 16:26:13
+ * @LastEditTime: 2020-04-16 21:06:12
+ * @LastEditors: your name
+ * @Description: In User Settings Edit
+ * @FilePath: /SakuraAutoCoder/CodeGen/Refl/codegen.classmember.hpp
+ */
 #pragma once
 #include "codegen.utils.hpp"
 #include <string>
@@ -31,17 +39,18 @@ namespace Sakura::refl
 				detail::inline_static_const_constexpr(output);
 				output << identifier("Meta::MetaPiece") << cppast::whitespace << identifier(prefix + "meta")
 					<< punctuation("[") << cppast::int_literal(std::to_string(data.size())) << punctuation("] = \n{");
+				auto i = 0u;
 				for (auto iter = data.begin(); iter != data.end(); iter++)
 				{
+					i++;
 					output << punctuation("\n    {") << cppast::string_literal("\"" + iter->first + "\"")
 						<< punctuation(", ") 
 						<< ((iter->second.size() > 0) ?
 						cppast::string_literal(iter->second) : 
 						cppast::string_literal("\"null\""))
 						<< punctuation("}");
-					if (++iter != data.end())
+					if (i != data.size())
 						output << punctuation(",");
-					iter--;
 				}
 				output << punctuation("\n};\n");
 			}
