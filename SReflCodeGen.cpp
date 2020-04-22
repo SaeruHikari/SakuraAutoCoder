@@ -146,6 +146,7 @@ void print_ast(std::ostream& out, const cppast::cpp_file& file)
 {
 	// print file name
 	std::string prefix; // the current prefix string
+	out << "\n#pragma once\n";
 	out << "#include <refl.rule.hxx>\n\n";
 	out << "using namespace Sakura::refl;\n\n";
 

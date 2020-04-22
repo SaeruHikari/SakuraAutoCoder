@@ -32,7 +32,7 @@ struct [[refl]] TestComponentWrap
 	float wtf = 155.f; 
 }; 
 
-enum class [[refl]] TestEnum : uint8_t   
+enum class [[refl]] TestEnum : uint8_t    
 {   
 	E_ONE [[ref]],  
 	E_TWO,   

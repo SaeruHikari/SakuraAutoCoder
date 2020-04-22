@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2020-04-23 00:08:32
- * @LastEditTime: 2020-04-23 01:29:21
+ * @LastEditTime: 2020-04-23 02:19:17
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /SakuraAutoCoder/include/filesystem.utils.h
@@ -37,6 +37,8 @@ namespace Sakura::fs
     {
         namespace fs = std::filesystem;
         auto ftime = fs::last_write_time(src);
+        if (!fs::exists(genFile))
+            return false;
         auto gentime = fs::last_write_time(genFile);
         std::time_t cftime = decltype(ftime)::clock::to_time_t(ftime);
         std::time_t cgentime = decltype(gentime)::clock::to_time_t(gentime);
