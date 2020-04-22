@@ -1,4 +1,4 @@
-// Copyright (C) 2017-2019 Jonathan M¨¹ller <jonathanmueller.dev@gmail.com>
+// Copyright (C) 2017-2019 Jonathan Mï¿½ï¿½ller <jonathanmueller.dev@gmail.com>
 // This file is subject to the license terms in the LICENSE file
 // found in the top-level directory of this distribution.
 
@@ -11,7 +11,11 @@
 #include <cppast/libclang_parser.hpp> // for libclang_parser, libclang_compile_config, cpp_entity,...
 #include <cppast/visitor.hpp>         // for visit()
 #include "CodeGen/Refl/codegen.hpp"
+#include "CodeGen/Common/TimeStrampHeader.hpp"
+#include "include/filesystem.utils.hpp"
 #include <fstream> 
+#include <filesystem>
+namespace fs = std::filesystem;
 
 extern std::unordered_map<std::string, Sakura::refl::ReflUnit> ReflUnits = {};
 extern bool bDebugAST = false;
@@ -253,7 +257,7 @@ try
 	else if (options.count("version"))
 	{
 		std::cout << "cppast version " << CPPAST_VERSION_STRING << "\n";
-		std::cout << "Copyright (C) Jonathan M¨¹ller 2017-2019 <jonathanmueller.dev@gmail.com>\n";
+		std::cout << "Copyright (C) Jonathan Mï¿½ï¿½ller 2017-2019 <jonathanmueller.dev@gmail.com>\n";
 		std::cout << '\n';
 		std::cout << "Using libclang version " << CPPAST_CLANG_VERSION_STRING << '\n';
 	}
@@ -264,106 +268,94 @@ try
 	}
 	else
 	{
-		// the compile config stores compilation flags
-		cppast::libclang_compile_config config;
-		if (options.count("database_dir"))
-		{
-			cppast::libclang_compilation_database database(
-				options["database_dir"].as<std::string>());
-			if (options.count("database_file"))
-				config
-				= cppast::libclang_compile_config(database,
-					options["database_file"].as<std::string>());
-			else
-				config
-				= cppast::libclang_compile_config(database, options["file"].as<std::string>());
-		}
-
-		if (options.count("verbose"))
-			config.write_preprocessed(true);
-
-		if (options.count("fast_preprocessing"))
-			config.fast_preprocessing(true);
-
-		if (options.count("remove_comments_in_macro"))
-			config.remove_comments_in_macro(true);
-
-		if (options.count("include_directory"))
-			for (auto& include : options["include_directory"].as<std::vector<std::string>>())
-			{
-				config.add_include_dir(include);
-				std::cout << "Include: " << include << std::endl;
-			}
-		if (options.count("macro_definition"))
-			for (auto& macro : options["macro_definition"].as<std::vector<std::string>>())
-			{
-				auto equal = macro.find('=');
-				auto name = macro.substr(0, equal);
-				if (equal == std::string::npos)
-					config.define_macro(std::move(name), "");
-				else
-				{
-					auto def = macro.substr(equal + 1u);
-					config.define_macro(std::move(name), std::move(def));
-				}
-			}
-		if (options.count("macro_undefinition"))
-			for (auto& name : options["macro_undefinition"].as<std::vector<std::string>>())
-				config.undefine_macro(name);
-		if (options.count("feature"))
-			for (auto& name : options["feature"].as<std::vector<std::string>>())
-				config.enable_feature(name);
-
-		// the compile_flags are generic flags
-		cppast::compile_flags flags;
-		if (options.count("gnu_extensions"))
-			flags |= cppast::compile_flag::gnu_extensions;
-		if (options.count("msvc_extensions"))
-			flags |= cppast::compile_flag::ms_extensions;
-		if (options.count("msvc_compatibility"))
-			flags |= cppast::compile_flag::ms_compatibility;
-
-		if (true)
-			config.set_flags(cppast::cpp_standard::cpp_1z, flags);
-		else if (options["std"].as<std::string>() == "c++98")
-			config.set_flags(cppast::cpp_standard::cpp_98, flags);
-		else if (options["std"].as<std::string>() == "c++03")
-			config.set_flags(cppast::cpp_standard::cpp_03, flags);
-		else if (options["std"].as<std::string>() == "c++11")
-			config.set_flags(cppast::cpp_standard::cpp_11, flags);
-		else if (options["std"].as<std::string>() == "c++14")
-			config.set_flags(cppast::cpp_standard::cpp_14, flags);
-		else if (options["std"].as<std::string>() == "c++1z")
-			config.set_flags(cppast::cpp_standard::cpp_1z, flags);
-		else
-		{
-			print_error("invalid value '" + options["std"].as<std::string>() + "' for std flag");
-			return 1;
-		}
-
-		// the logger is used to print diagnostics
-		cppast::stderr_diagnostic_logger logger;
-		if (options.count("verbose"))
-			logger.set_verbose(true);
-
-		auto file = parse_file(config, logger, options["file"].as<std::string>(),
-			options.count("fatal_errors") == 1);
-		
 		if (options.count("o"))
 		{
-			std::string oof = options["o"].as<std::string>();
+			fs::path p = options["file"].as<std::string>();
+			fs::path genp = options["o"].as<std::string>();
+			if(!Sakura::fs::generated_file_valid(p, genp))
+			{
+				// the compile config stores compilation flags
+				cppast::libclang_compile_config config;
+				if (options.count("database_dir"))
+				{
+					cppast::libclang_compilation_database database(
+						options["database_dir"].as<std::string>());
+					if (options.count("database_file"))
+						config
+						= cppast::libclang_compile_config(database,
+							options["database_file"].as<std::string>());
+					else
+						config
+						= cppast::libclang_compile_config(database, options["file"].as<std::string>());
+				}
 
-			std::ofstream outf(oof);
-			if (!file)
-				return 2;
-			startTime = std::chrono::high_resolution_clock::now();
+				if (options.count("verbose"))
+					config.write_preprocessed(true);
 
-			print_ast(outf, *file);
+				if (options.count("fast_preprocessing"))
+					config.fast_preprocessing(true);
+
+				if (options.count("remove_comments_in_macro"))
+					config.remove_comments_in_macro(true);
+
+				if (options.count("include_directory"))
+					for (auto& include : options["include_directory"].as<std::vector<std::string>>())
+					{
+						config.add_include_dir(include);
+						std::cout << "Include: " << include << std::endl;
+					}
+				if (options.count("macro_definition"))
+					for (auto& macro : options["macro_definition"].as<std::vector<std::string>>())
+					{
+						auto equal = macro.find('=');
+						auto name = macro.substr(0, equal);
+						if (equal == std::string::npos)
+							config.define_macro(std::move(name), "");
+						else
+						{
+							auto def = macro.substr(equal + 1u);
+							config.define_macro(std::move(name), std::move(def));
+						}
+					}
+				if (options.count("macro_undefinition"))
+					for (auto& name : options["macro_undefinition"].as<std::vector<std::string>>())
+						config.undefine_macro(name);
+				if (options.count("feature"))
+					for (auto& name : options["feature"].as<std::vector<std::string>>())
+						config.enable_feature(name);
+
+				// the compile_flags are generic flags
+				cppast::compile_flags flags;
+				if (options.count("gnu_extensions"))
+					flags |= cppast::compile_flag::gnu_extensions;
+				if (options.count("msvc_extensions"))
+					flags |= cppast::compile_flag::ms_extensions;
+				if (options.count("msvc_compatibility"))
+					flags |= cppast::compile_flag::ms_compatibility;
+
+				config.set_flags(cppast::cpp_standard::cpp_1z, flags);
+
+				// the logger is used to print diagnostics
+				cppast::stderr_diagnostic_logger logger;
+				if (options.count("verbose"))
+					logger.set_verbose(true);
+				std::string oof = options["o"].as<std::string>();
+				std::ofstream outf(oof, fstream::out | ios_base::trunc);
+
+				startTime = std::chrono::high_resolution_clock::now();
+				auto file = parse_file(config, logger, options["file"].as<std::string>(),
+				options.count("fatal_errors") == 1);
+
+				if (!file)
+					return 2;
+				Sakura::CommonGen::gen_timestamp_header(outf, genp);
+				print_ast(outf, *file);
+			}
 		}
 	}
 	auto currentTime = std::chrono::high_resolution_clock::now();
 	float time = std::chrono::duration
-		<float, std::chrono::milliseconds::period>(currentTime - startTime).count();
+		<float, std::chrono::seconds::period>(currentTime - startTime).count();
 	std::cout << time << std::endl;
 }
 catch (const cppast::libclang_error& ex)

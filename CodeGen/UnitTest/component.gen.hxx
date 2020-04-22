@@ -1,3 +1,6 @@
+//generated time:1587578494
+//generated end
+
 #include <refl.rule.hxx>
 
 using namespace Sakura::refl;
