@@ -7,7 +7,7 @@
 #include <cstring>
 #include <fstream>
 #include <vector>
-
+#include <iostream>
 #include <clang-c/CXCompilationDatabase.h>
 #include <process.hpp>
 
@@ -519,12 +519,12 @@ detail::cxtranslation_unit get_cxunit(const diagnostic_logger& logger, const det
                                       const std::string& source)
 {
     CXUnsavedFile file{path, source.c_str(), static_cast<unsigned long>(source.length())};
-
     auto args = get_arguments(config);
 
     CXTranslationUnit tu;
     auto              flags = CXTranslationUnit_Incomplete | CXTranslationUnit_KeepGoing
                  | CXTranslationUnit_DetailedPreprocessingRecord;
+    
 
     auto error
         = clang_parseTranslationUnit2(idx.get(), path, // index and path
@@ -534,22 +534,23 @@ detail::cxtranslation_unit get_cxunit(const diagnostic_logger& logger, const det
                                       unsigned(flags), &tu);
     if (error != CXError_Success)
     {
-        switch (error)
-        {
-        case CXError_Success:
-            DEBUG_UNREACHABLE(detail::assert_handler{});
-            break;
+        //switch (error)
+        //{
+        //case CXError_Success:
+            //DEBUG_UNREACHABLE(detail::assert_handler{});
+            //break;
 
-        case CXError_Failure:
-            throw libclang_error("clang_parseTranslationUnit: generic error");
-        case CXError_Crashed:
-            throw libclang_error("clang_parseTranslationUnit: libclang crashed :(");
-        case CXError_InvalidArguments:
-            throw libclang_error("clang_parseTranslationUnit: you shouldn't see this message");
-        case CXError_ASTReadError:
-            throw libclang_error("clang_parseTranslationUnit: AST deserialization error");
-        }
+        //case CXError_Failure:
+        //    throw libclang_error("clang_parseTranslationUnit: generic error");
+        //case CXError_Crashed:
+        //    throw libclang_error("clang_parseTranslationUnit: libclang crashed :(");
+        //case CXError_InvalidArguments:
+        //    throw libclang_error("clang_parseTranslationUnit: you shouldn't see this message");
+        //case CXError_ASTReadError:
+        //    throw libclang_error("clang_parseTranslationUnit: AST deserialization error");
+        //}
     }
+    
     print_diagnostics(logger, tu);
 
     return detail::cxtranslation_unit(tu);
@@ -573,20 +574,20 @@ std::unique_ptr<cpp_file> libclang_parser::do_parse(const cpp_entity_index& idx,
 
     // preprocess
     auto preprocessed = detail::preprocess(config, path.c_str(), logger());
-    if (detail::libclang_compile_config_access::write_preprocessed(config))
+    /*if (detail::libclang_compile_config_access::write_preprocessed(config))
     {
         std::ofstream file(path + ".pp");
         file << preprocessed.source;
-    }
-
+    }*/
     // parse
     auto tu   = get_cxunit(logger(), pimpl_->index, config, path.c_str(), preprocessed.source);
+    
     auto file = clang_getFile(tu.get(), path.c_str());
 
     cpp_file::builder builder(detail::cxstring(clang_getFileName(file)).std_str());
     auto              macro_iter   = preprocessed.macros.begin();
     auto              include_iter = preprocessed.includes.begin();
-
+ 
     // convert entity hierarchies
     detail::parse_context context{tu.get(),
                                   file,

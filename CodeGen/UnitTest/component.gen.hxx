@@ -1,4 +1,4 @@
-//generated time:1587579611
+//generated time:1587661972
 //generated end
 
 
@@ -42,7 +42,7 @@ inline static const constexpr Meta::MetaPiece Method_meta[1] =
 inline static const constexpr auto all_fields()
 {
     SFIELD_INFO(attrib, float, TestComponent, attrib_meta);
-    SFIELD_INFO(name, std::string, TestComponent, name_meta);
+    SFIELD_INFO(name, int, TestComponent, name_meta);
     return hana::make_tuple(attrib_info(), name_info());
 }
 inline static const constexpr auto all_static_fields()

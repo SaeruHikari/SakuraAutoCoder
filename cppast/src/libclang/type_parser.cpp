@@ -5,6 +5,7 @@
 #include "parse_functions.hpp"
 
 #include <cctype>
+#include <iostream>
 
 #include <cppast/cpp_array_type.hpp>
 #include <cppast/cpp_decltype_type.hpp>

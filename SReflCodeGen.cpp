@@ -4,21 +4,20 @@
 
 #include <iostream>
 #include "cppast/external/cxxopts/include/cxxopts.hpp"
-#include <cppast/code_generator.hpp>         // for generate_code()
-#include <cppast/cpp_entity_kind.hpp>        // for the cpp_entity_kind definition
 #include <cppast/cpp_forward_declarable.hpp> // for is_definition()
 #include <cppast/cpp_namespace.hpp>          // for cpp_namespace
-#include <cppast/libclang_parser.hpp> // for libclang_parser, libclang_compile_config, cpp_entity,...
 #include <cppast/visitor.hpp>         // for visit()
-#include "CodeGen/Refl/codegen.hpp"
-#include "CodeGen/Common/TimeStrampHeader.hpp"
+#include "CodeGen/Common/TimeStampHeader.hpp"
 #include "include/filesystem.utils.hpp"
+#include "Parse/sakura_cpp.parser.hpp"
+#include "CodeGen/Refl/refl.codegenerater.hpp"
 #include <fstream> 
 #include <filesystem>
 namespace fs = std::filesystem;
 
 extern std::unordered_map<std::string, Sakura::refl::ReflUnit> ReflUnits = {};
 extern bool bDebugAST = false;
+
 
 // print help options
 void print_help(const cxxopts::Options& options)
@@ -30,182 +29,6 @@ void print_help(const cxxopts::Options& options)
 void print_error(const std::string& msg)
 {
 	std::cerr << msg << '\n';
-}
-
-// prints the AST entry of a cpp_entity (base class for all entities),
-// will only print a single line
-void print_entity(std::ostream& out, const cppast::cpp_entity& e)
-{
-	// print name and the kind of the entity
-	if (bDebugAST)
-	{
-		if (!e.name().empty())
-			out << e.name();
-		else
-			out << "<anonymous>";
-		out << " (" << cppast::to_string(e.kind()) << ")";
-
-		// print whether or not it is a definition
-		if (cppast::is_definition(e))
-			out << " [definition]";
-	}
-
-	// print number of attributes
-	if (e.attributes().empty())
-	{
-		return;
-	}
-	else 
-	{
-		if (e.kind() == cppast::cpp_entity_kind::language_linkage_t)
-			// no need to print additional information for language linkages
-			out << '\n';
-		else if (e.kind() == cppast::cpp_entity_kind::namespace_t)
-		{
-			// cast to cpp_namespace
-			auto& ns = static_cast<const cppast::cpp_namespace&>(e);
-			// print whether or not it is inline
-			if (ns.is_inline() && bDebugAST)
-				out << " [inline]";
-			out << '\n';
-		}
-		else
-		{
-			// print the declaration of the entity
-			// it will only use a single line
-			// derive from code_generator and implement various callbacks for printing
-			// it will print into a std::string
-			class code_generator : public cppast::code_generator
-			{
-				std::string str_;                 // the result
-				bool        was_newline_ = false; // whether or not the last token was a newline
-				// needed for lazily printing them
-
-			public:
-				code_generator(const cppast::cpp_entity& e)
-				{
-					// kickoff code generation here
-					cppast::generate_code_custom(*this, e, Sakura::refl::generate_code_impl);
-				}
-
-				// return the result
-				const std::string& str() const noexcept
-				{
-					return str_;
-				}
-
-			private:
-				// called to retrieve the generation options of an entity
-				generation_options do_get_options(const cppast::cpp_entity&,
-					cppast::cpp_access_specifier_kind) override
-				{
-					// generate declaration only
-					return code_generator::declaration;
-				}
-
-				// no need to handle indentation, as only a single line is used
-				void do_indent() override {}
-				void do_unindent() override {}
-
-				// called when a generic token sequence should be generated
-				// there are specialized callbacks for various token kinds,
-				// to e.g. implement syntax highlighting
-				void do_write_token_seq(cppast::string_view tokens) override
-				{
-					if (was_newline_)
-					{
-						// lazily append newline as space
-						str_ += ' ';
-						was_newline_ = false;
-					}
-					// append tokens
-					str_ += tokens.c_str();
-				}
-
-				// called when a newline should be generated
-				// we're lazy as it will always generate a trailing newline,
-				// we don't want
-				void do_write_newline() override
-				{
-					was_newline_ = true;
-				}
-
-			} generator(e);
-			// print generated code
-			if (bDebugAST)
-				out << ": `";
-			out << generator.str();
-			if (bDebugAST)
-				out << '`' << '\n';
-		}
-	}
-}
-
-// prints the AST of a file
-void print_ast(std::ostream& out, const cppast::cpp_file& file)
-{
-	// print file name
-	std::string prefix; // the current prefix string
-	out << "\n#pragma once\n";
-	out << "#include <refl.rule.hxx>\n\n";
-	out << "using namespace Sakura::refl;\n\n";
-
-	// recursively visit file and all children
-	cppast::visit(file, [&](const cppast::cpp_entity& e, cppast::visitor_info info)
-	{
-		if (e.kind() == cppast::cpp_entity_kind::file_t || cppast::is_templated(e)
-			|| cppast::is_friended(e))
-			// no need to do anything for a file,
-			// templated and friended entities are just proxies, so skip those as well
-			// return true to continue visit for children
-			return true;
-		else if (info.event == cppast::visitor_info::container_entity_exit)
-		{
-			if (bDebugAST)
-			{
-				prefix.pop_back();
-				prefix.pop_back();
-			}
-		}
-		else
-		{
-			if (bDebugAST)
-			{
-				out << prefix;
-				if (info.last_child)
-				{
-					if (info.event == cppast::visitor_info::container_entity_enter)
-						prefix += "  ";
-				}
-				else
-				{
-					if (info.event == cppast::visitor_info::container_entity_enter)
-						prefix += "| ";
-				}
-			}
-			print_entity(out, e);
-		}
-
-		return true;
-		});
-}
-
-// parse a file
-std::unique_ptr<cppast::cpp_file> parse_file(const cppast::libclang_compile_config& config,
-	const cppast::diagnostic_logger& logger,
-	const std::string& filename, bool fatal_error)
-{
-	// the entity index is used to resolve cross references in the AST
-	// we don't need that, so it will not be needed afterwards
-	cppast::cpp_entity_index idx;
-	// the parser is used to parse the entity
-	// there can be multiple parser implementations
-	cppast::libclang_parser parser(type_safe::ref(logger));
-	// parse the file
-	auto file = parser.parse(idx, filename, config);
-	// if (fatal_error && parser.error())
-	//    return nullptr;
-	return file;
 }
 
 int main(int argc, char* argv[])
@@ -243,11 +66,8 @@ try
 		("msvc_compatibility", "enable MSVC compatibility (equivalent to -fms-compatibility)")
 		("fast_preprocessing", "enable fast preprocessing, be careful, this breaks if you e.g. redefine macros in the same file!")
 		("remove_comments_in_macro", "whether or not comments generated by macro are kept, enable if you run into errors");
-	
-	
 	// clang-format on
 	option_list.parse_positional("file");
-
 	auto options = option_list.parse(argc, argv);
 	auto startTime = std::chrono::high_resolution_clock::now();
 
@@ -273,84 +93,30 @@ try
 		{
 			fs::path p = options["file"].as<std::string>();
 			fs::path genp = options["o"].as<std::string>();
-			if(!Sakura::fs::generated_file_valid(p, genp))
+			std::map<fs::path, bool> validMap;
+			validMap[p] = Sakura::fs::generated_file_valid(p, genp);
+			if(!validMap[p])
 			{
 				// the compile config stores compilation flags
 				cppast::libclang_compile_config config;
-				if (options.count("database_dir"))
-				{
-					cppast::libclang_compilation_database database(
-						options["database_dir"].as<std::string>());
-					if (options.count("database_file"))
-						config
-						= cppast::libclang_compile_config(database,
-							options["database_file"].as<std::string>());
-					else
-						config
-						= cppast::libclang_compile_config(database, options["file"].as<std::string>());
-				}
-
-				if (options.count("verbose"))
-					config.write_preprocessed(true);
-
-				if (options.count("fast_preprocessing"))
-					config.fast_preprocessing(true);
-
-				if (options.count("remove_comments_in_macro"))
-					config.remove_comments_in_macro(true);
-
-				if (options.count("include_directory"))
-					for (auto& include : options["include_directory"].as<std::vector<std::string>>())
-					{
-						config.add_include_dir(include);
-						std::cout << "Include: " << include << std::endl;
-					}
-				if (options.count("macro_definition"))
-					for (auto& macro : options["macro_definition"].as<std::vector<std::string>>())
-					{
-						auto equal = macro.find('=');
-						auto name = macro.substr(0, equal);
-						if (equal == std::string::npos)
-							config.define_macro(std::move(name), "");
-						else
-						{
-							auto def = macro.substr(equal + 1u);
-							config.define_macro(std::move(name), std::move(def));
-						}
-					}
-				if (options.count("macro_undefinition"))
-					for (auto& name : options["macro_undefinition"].as<std::vector<std::string>>())
-						config.undefine_macro(name);
-				if (options.count("feature"))
-					for (auto& name : options["feature"].as<std::vector<std::string>>())
-						config.enable_feature(name);
-
-				// the compile_flags are generic flags
-				cppast::compile_flags flags;
-				if (options.count("gnu_extensions"))
-					flags |= cppast::compile_flag::gnu_extensions;
-				if (options.count("msvc_extensions"))
-					flags |= cppast::compile_flag::ms_extensions;
-				if (options.count("msvc_compatibility"))
-					flags |= cppast::compile_flag::ms_compatibility;
-
-				config.set_flags(cppast::cpp_standard::cpp_1z, flags);
-
+				Sakura::parser::sakura_cpp_config(config, options);
 				// the logger is used to print diagnostics
 				cppast::stderr_diagnostic_logger logger;
 				if (options.count("verbose"))
 					logger.set_verbose(true);
+
+				// parse and gen-code for single file
 				std::string oof = options["o"].as<std::string>();
 				std::ofstream outf(oof, fstream::out | ios_base::trunc);
-
 				startTime = std::chrono::high_resolution_clock::now();
-				auto file = parse_file(config, logger, options["file"].as<std::string>(),
+				auto file = Sakura::parser::parse_file(config, logger, options["file"].as<std::string>(),
 				options.count("fatal_errors") == 1);
-
 				if (!file)
 					return 2;
+				// start codegen
 				Sakura::CommonGen::gen_timestamp_header(outf, genp);
-				print_ast(outf, *file);
+				// generate reflection code
+				Sakura::refl::gen_refl_code(outf, *file);
 			}
 		}
 	}

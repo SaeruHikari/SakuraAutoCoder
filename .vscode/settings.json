@@ -72,6 +72,10 @@
         "unordered_map": "cpp",
         "unordered_set": "cpp",
         "utility": "cpp",
-        "vector": "cpp"
-    }
+        "vector": "cpp",
+        "__functional_03": "cpp",
+        "numeric": "cpp",
+        "random": "cpp"
+    },
+    "C_Cpp.default.configurationProvider": "vector-of-bool.cmake-tools"
 }

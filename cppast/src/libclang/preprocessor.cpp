@@ -3,7 +3,7 @@
 // found in the top-level directory of this distribution.
 
 #include "preprocessor.hpp"
-
+#include <iostream>
 #include <algorithm>
 #include <atomic>
 #include <cctype>
@@ -109,16 +109,17 @@ void log_diagnostic(const diagnostic_logger& logger, const std::string& msg)
 
 // parses missing header file diagnostic and returns the file name,
 // if it is a missing header file diagnostic
-ts::optional<std::string> parse_missing_file(const std::string& cur_file, const std::string& msg)
+ts::optional<std::string> parse_missing_file(const std::string& cur_file, 
+    const std::string& msg)
 {
     auto ptr = msg.c_str();
 
     auto loc = parse_source_location(ptr);
     if (loc.file != cur_file)
-        return type_safe::nullopt;
-
+ 
+    std::cout <<  loc.file.value().c_str();
     while (*ptr == ' ')
-        ++ptr;
+        ++ptr; 
 
     parse_severity(ptr);
     while (*ptr == ' ')
@@ -403,7 +404,6 @@ clang_preprocess_result clang_preprocess_impl(const libclang_compile_config& c,
                                               const std::string& full_path, const char* macro_path)
 {
     clang_preprocess_result result;
-
     std::string diagnostic;
     auto        expect_bad_exit_code = false;
     auto        diagnostic_handler   = [&](const char* str, std::size_t n) {
@@ -419,10 +419,12 @@ clang_preprocess_result clang_preprocess_impl(const libclang_compile_config& c,
                     // hide diagnostics
 
                     auto file = parse_missing_file(full_path, diagnostic);
-                    if (file)
-                        // save for clang without -dI flag
+                    if (file && false)
+                    {
                         result.included_files.push_back(file.value());
-
+                    }
+                        // save for clang without -dI flag
+                    
                     expect_bad_exit_code = true;
                 }
                 else
@@ -433,23 +435,49 @@ clang_preprocess_result clang_preprocess_impl(const libclang_compile_config& c,
             else
                 diagnostic.push_back(*str);
     };
-
-    auto         cmd = get_preprocess_command(c, full_path.c_str(), macro_path);
-    tpl::Process process(cmd, "",
-                         [&](const char* str, std::size_t n) {
-                             for (auto ptr = str; ptr != str + n; ++ptr)
-                                 if (*ptr == '\t')
-                                     result.file += ' '; // convert to single spaces
-                                 else if (*ptr != '\r')
-                                     result.file += *ptr;
-                         },
-                         diagnostic_handler);
-    // wait for process end
-    auto exit_code = process.get_exit_status();
-    DEBUG_ASSERT(diagnostic.empty(), detail::assert_handler{});
-    if (exit_code != 0 && !expect_bad_exit_code)
+    if(false)
+    {
+        auto         cmd = get_preprocess_command(c, full_path.c_str(), macro_path);
+        tpl::Process process(cmd, "",
+                            [&](const char* str, std::size_t n) {
+                                for (auto ptr = str; ptr != str + n; ++ptr)
+                                {
+                                    if (*ptr == '\t')
+                                        result.file += ' '; // convert to single spaces
+                                    else if (*ptr != '\r')
+                                        result.file += *ptr;
+                                }
+                            },
+                            diagnostic_handler);
+        
+        // wait for process end
+        auto exit_code = process.get_exit_status();
+        DEBUG_ASSERT(diagnostic.empty(), detail::assert_handler{});
+        if (exit_code != 0 && !expect_bad_exit_code)
         throw libclang_error("preprocessor: command '" + cmd + "' exited with non-zero exit code ("
                              + std::to_string(exit_code) + ")");
+    }
+    else
+    {
+        std::ifstream t(full_path.c_str());  
+        //std::stringstream buffer;  
+        //buffer << t.rdbuf();  
+        //std::string contents(buffer.str());  
+        //result.file = std::move(contents); 
+        std::string line;
+        std::string prefix = "#include";
+        while (std::getline(t, line)) 
+        {
+            if(strncmp(line.c_str(), prefix.c_str() , prefix.length()) == 0);
+            else
+            {
+                result.file += line;
+                result.file += "\n";
+            }
+        }
+        t.close();
+        std::cout << result.file;
+    }
 
     return result;
 }
@@ -924,13 +952,17 @@ ts::optional<std::string> parse_undef(position& p)
     return result;
 }
 
-type_safe::optional<detail::pp_include> parse_include(position& p)
+type_safe::optional<detail::pp_include> parse_include(position& p, bool rmv)
 {
     // format (at new line, literal <>): #include <filename>
     // or: #include "filename"
     // note: write include back
     if (!p.was_newl() || !starts_with(p, "#include"))
         return type_safe::nullopt;
+    if (p.was_newl() && starts_with(p, "#include") && rmv)
+    {
+        p.write_str("//");
+    }
     p.bump(std::strlen("#include"));
     if (starts_with(p, "_next"))
         p.bump(std::strlen("_next"));
@@ -1058,7 +1090,7 @@ ts::optional<linemarker> parse_linemarker(position& p)
     return result;
 }
 } // namespace
-
+#include <iostream>
 detail::preprocessor_output detail::preprocess(const libclang_compile_config& config,
                                                const char* path, const diagnostic_logger& logger)
 {
@@ -1085,7 +1117,7 @@ detail::preprocessor_output detail::preprocess(const libclang_compile_config& co
             p.bump(2u);
         else if (in_char == false && starts_with(p, R"(")")) // starts with "
         {
-            p.bump();
+            p.bump(); 
             in_string.toggle();
         }
         else if (in_string == false && starts_with(p, "'"))
@@ -1122,9 +1154,9 @@ detail::preprocessor_output detail::preprocess(const libclang_compile_config& co
                                     result.macros.end());
             }
         }
-        else if (auto include = parse_include(p))
+        else if (auto include = parse_include(p, true))
         {
-            if (p.write_enabled())
+            /*if (p.write_enabled())
             {
                 if (logger.is_verbose())
                     logger.log("preprocessor",
@@ -1134,10 +1166,12 @@ detail::preprocessor_output detail::preprocess(const libclang_compile_config& co
                                                  "'"));
 
                 result.includes.push_back(std::move(include.value()));
-            }
+            }*/
         }
         else if (bump_pragma(p))
+        {
             continue;
+        }
         else if (auto lm = parse_linemarker(p))
         {
             if (lm.value().flag == linemarker::enter_new)

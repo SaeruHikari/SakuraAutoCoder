@@ -6,6 +6,7 @@
 
 #include <cppast/cpp_member_variable.hpp>
 #include <cppast/cpp_variable.hpp>
+#include <iostream>
 
 #include "libclang_visitor.hpp"
 
