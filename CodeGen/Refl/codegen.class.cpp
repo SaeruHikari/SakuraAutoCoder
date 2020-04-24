@@ -24,6 +24,21 @@ namespace Sakura::refl
 {
 	namespace detail
 	{
+		auto get_class_entity_Name_sp(const cpp_class& c)
+		{
+			const cpp_entity* unit = &c;
+			std::string _n = c.name();
+			std::string _t = "::";
+			while(unit->parent().has_value() &&
+				(unit->parent().value().kind() == cpp_entity_kind::namespace_t ||
+				 unit->parent().value().kind() == cpp_entity_kind::class_t))
+			{
+				_n = unit->parent().value().name() + _t + _n;
+				unit = &unit->parent().value();
+			}
+			return _n;
+		}
+
 		bool generate_base_class(code_generator& generator, const cpp_base_class& base,
 			cpp_access_specifier_kind)
 		{
@@ -59,7 +74,8 @@ namespace Sakura::refl
 			output << keyword("const") << cppast::whitespace << cppast::identifier("char*")
 				<< cppast::whitespace << identifier("GetClassName") << punctuation("()") << cppast::newl << cppast::punctuation("\n{\n");
 			output << cppast::punctuation("    ") << keyword("return") << cppast::whitespace <<
-				cppast::string_literal("\"") << cppast::string_literal(c.name()) 
+				cppast::string_literal("\"") <<
+					cppast::string_literal(get_class_entity_Name_sp(c))
 					<< cppast::string_literal("\"") << cppast::punctuation(";\n}\n");
 		}
 		
@@ -132,7 +148,8 @@ namespace Sakura::refl
 				<< cppast::identifier(GetMetaGetterName(fieldSet)) << cppast::punctuation("()\n{\n");
 			for (auto iter = fields.begin(); iter != fields.end(); iter++)
 			{
-				output << punctuation("    ") << cppast::identifier(GetMetaMacroGenName(fieldSet)) << cppast::punctuation("(")
+				output << punctuation("    ") 
+					<< cppast::identifier(GetMetaMacroGenName(fieldSet)) << cppast::punctuation("(")
 					<< identifier(iter->first) << punctuation(", ")
 					//<< identifier(iter->second.type) << punctuation(", ")
 					<< identifier(unit.unitName) << punctuation(", ");
@@ -238,7 +255,13 @@ namespace Sakura::refl
 			output << identifier(c.semantic_scope());
 			if(reflUnit.unitMetas.find("refl") != reflUnit.unitMetas.end())
 			{
-				output << identifier("template<>\nstruct ClassInfo<" + c.name() + ">\n{\n");
+				output << identifier("template<>\nstruct ClassInfo<" + 
+					detail::get_class_entity_Name_sp(c) + ">\n{\n")
+					<< cppast::keyword("using") << cppast::whitespace
+					<< cppast::identifier(reflUnit.unitName) << cppast::whitespace
+					<< cppast::punctuation("=") << cppast::whitespace
+					<< cppast::identifier(detail::get_class_entity_Name_sp(c))
+					<< cppast::punctuation(";\n");
 			}
 			detail::gen_getClassName(output, c);
 			detail::gen_meta(output, "", reflUnit.unitMetas);

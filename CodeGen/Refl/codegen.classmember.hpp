@@ -43,7 +43,8 @@ namespace Sakura::refl
 				for (auto iter = data.begin(); iter != data.end(); iter++)
 				{
 					i++;
-					output << punctuation("\n    {") << cppast::string_literal("\"" + iter->first + "\"")
+					output << punctuation("\n    {") 
+						<< cppast::string_literal("\"" + iter->first + "\"")
 						<< punctuation(", ") 
 						<< ((iter->second.size() > 0) ?
 						cppast::string_literal(iter->second) : 

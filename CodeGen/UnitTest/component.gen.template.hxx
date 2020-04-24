@@ -1,4 +1,12 @@
-//generated time:1587724250
+/*
+ * @Author: your name
+ * @Date: 2020-04-24 17:07:41
+ * @LastEditTime: 2020-04-24 17:21:08
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: /SakuraAutoCoder/CodeGen/UnitTest/component.gen.template.hxx
+ */
+//generated time:1587715834
 //generated end
 
 
@@ -8,12 +16,11 @@
 using namespace Sakura::refl;
 
 template<>
-struct ClassInfo<Test::TestComponent>
+struct ClassInfo<TestComponent>
 {
-using TestComponent = Test::TestComponent;
 inline static const constexpr const char* GetClassName() 
 {
-    return "Test::TestComponent";
+    return "TestComponent";
 }
 inline static const constexpr Meta::MetaPiece meta[2] = 
 {
@@ -59,12 +66,11 @@ inline static const constexpr auto all_methods()
 
 };
 template<>
-struct ClassInfo<Test::TestComponentWrap>
+struct ClassInfo<TestComponentWrap>
 {
-using TestComponentWrap = Test::TestComponentWrap;
 inline static const constexpr const char* GetClassName() 
 {
-    return "Test::TestComponentWrap";
+    return "TestComponentWrap";
 }
 inline static const constexpr Meta::MetaPiece meta[1] = 
 {
@@ -90,3 +96,36 @@ inline static const constexpr auto all_static_fields()
 }
 
 };
+#define SENUM_FIELD_INFO(...)
+
+template<>
+struct EnumInfo<TestEnum>
+{
+    inline static const constexpr const char* GetEnumName() 
+    {
+        return "TestEnum";
+    }
+    inline static const constexpr Meta::MetaPiece meta[1] = 
+    {
+        {"refl", "null"}
+    };
+    inline static const constexpr Meta::MetaPiece E_ONE_meta[1] = 
+    {
+        {"enum", "This is enum one"}
+    };
+    inline static const constexpr Meta::MetaPiece E_TWO_meta[1] =
+    {
+        {"enum", "This is enum two"}
+    };
+    inline static const constexpr Meta::MetaPiece E_THREE_meta[1] = 
+    {
+        {"enum", "This is enum three"}
+    };
+    inline static const constexpr auto all_fields()
+    {
+        SENUM_FIELD_INFO(E_ONE, TestEnum, comp_meta);
+        SENUM_FIELD_INFO(E_TWO, TestEnum, nullptr);
+        SENUM_FIELD_INFO(E_THREE, TestEnum, nullptr);
+        return hana::make_tuple(E_ONE_info(), E_TWO_info(), E_THREE_info());
+    }
+}
