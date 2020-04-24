@@ -1,7 +1,7 @@
 ﻿/*
  * @Author: your name
  * @Date: 2020-04-04 12:32:09
- * @LastEditTime: 2020-04-24 17:04:28
+ * @LastEditTime: 2020-04-24 22:46:11
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \undefinedd:\Coding\SakuraAutoCoder\CodeGen\refl.rule.hxx
@@ -60,6 +60,15 @@ namespace Sakura::refl
 		Sakura::refl::decay_type_name<decltype(&MOTHER_BOARD::NAME)>(),\
 		0, __VA_ARGS__ };\
 		decltype(&MOTHER_BOARD::NAME) ptr = &MOTHER_BOARD::NAME;\
+	};
+
+#define SENUM_FIELD_INFO(NAME, MOTHER_BOARD, ...) \
+	struct NAME##_info{\
+		constexpr NAME##_info() = default;\
+		Field fd = Field{#NAME,\
+		Sakura::refl::decay_type_name<MOTHER_BOARD>(),\
+		0, __VA_ARGS__};\
+		MOTHER_BOARD val = MOTHER_BOARD::NAME;\
 	};
 
 namespace Sakura::refl
@@ -336,6 +345,41 @@ namespace Sakura::refl
 		assert(0 && "No field of this name.");
 		return o;
 	}
+
+	template<typename T>
+	struct SEnum
+	{
+		using EnumName = std::decay_t<T>;
+		using info = EnumInfo<EnumName>;
+		inline static const constexpr char* GetName(){return info::GetEnumName();}
+		inline static const constexpr Meta GetEnumMeta(){return Meta(info::meta);}
+		inline static const constexpr std::size_t id_ =
+			detail::_Fnv1a_append_bytes(Sakura::refl::detail::_FNV_offset_basis,
+				info::GetEnumName(), detail::length(info::GetEnumName()) * sizeof(char));
+		inline static const constexpr std::size_t GetTypeId() { return id_; }
+
+		template <typename Fn>
+		inline static constexpr void ForEachStaticField(Fn&& fn)
+		{
+			detail::ForEachTuple(info::all_static_fields(),
+				[&fn](auto&& field_schema)
+				{
+					fn(field_schema.val, field_schema.fd);
+				});
+		}
+		
+		inline static const char* ToString(T t)
+		{
+			const char* result = "NULL";
+			ForEachStaticField([&](T val, const Field& meta)
+			{
+				if(t == val)
+					result = meta.name;
+			});
+			return result;
+
+		}
+	};
 
 	template<typename T>
 	struct SClass
@@ -694,7 +738,6 @@ namespace Sakura::refl
 		virtual const char* GetName() const override final { return GetClassName<T>(); }
 	};
 
-	template<typename T> struct SEnum : IEnum {};
 	template <typename T, T t> struct Function : IFunction {};
 	template <typename T, T t> struct Method : IMethod {};
 }

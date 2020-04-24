@@ -1,7 +1,7 @@
 /*
  * @Author: your name 
  * @Date: 2020-04-04 11:12:12
- * @LastEditTime: 2020-04-24 18:34:21
+ * @LastEditTime: 2020-04-24 22:05:27
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit 
  * @FilePath: \undefinedd :\Coding\SakuraAutoCoder\CodeGen\component.refl.hxx
@@ -44,5 +44,5 @@ namespace Test
 		E_THREE [[enum("This is enum three")]]    
 	};  
 }
-#include "component.gen.hxx"    
+#include "component.gen.template.hxx"    
  
