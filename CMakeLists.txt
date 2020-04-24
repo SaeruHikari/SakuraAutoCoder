@@ -37,6 +37,8 @@ add_executable(
 	CodeGen/Refl/codegen.classmember.hpp
 	CodeGen/Refl/codegen.class.hpp
 	CodeGen/Refl/codegen.class.cpp
+	CodeGen/Refl/codegen.enum.hpp
+	CodeGen/Refl/codegen.enum.cpp
 	)
 add_executable(
 	ReflTest

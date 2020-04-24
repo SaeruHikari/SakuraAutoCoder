@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2020-04-23 00:08:32
- * @LastEditTime: 2020-04-23 02:19:17
+ * @LastEditTime: 2020-04-25 02:03:38
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /SakuraAutoCoder/include/filesystem.utils.h
@@ -51,7 +51,7 @@ namespace Sakura::fs
             auto realMTime = std::atoi(varMap["time"].c_str());
             if(realMTime < cftime)
             {
-                if(debugInfo)
+                if(true)
                     std::cout << "Generated file editted unexpectly, would not re-generate one!" << std::endl;
                 return false;
             }

@@ -1,3 +1,11 @@
+/*
+ * @Author: your name
+ * @Date: 2020-04-22 00:49:46
+ * @LastEditTime: 2020-04-24 23:21:39
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: /SakuraAutoCoder/CodeGen/Refl/codegen.hpp
+ */
 #pragma once
 #include <cppast/cpp_alias_template.hpp>
 #include <cppast/cpp_enum.hpp>
@@ -16,17 +24,13 @@
 #include <cppast/cpp_variable.hpp>
 #include <cppast/cpp_variable_template.hpp>
 #include "codegen.class.hpp"
+#include "codegen.enum.hpp"
 using namespace std;
 
 namespace Sakura::refl
 {
 	bool generate_code_impl(cppast::code_generator& generator, const cpp_entity& e,
 		cpp_access_specifier_kind cur_access);
-
-	namespace detail
-	{
-		
-	}
 
 	inline bool generate_file(
 		std::function<bool(cppast::code_generator&,
@@ -58,10 +62,11 @@ namespace Sakura::refl
 #define CPPAST_DETAIL_HANDLE(Name)                                                                 \
     case cpp_entity_kind::Name##_t:                                                                \
         return Sakura::refl::generate_##Name(\
-			generate_code_impl, generator, static_cast<const cpp_##Name&>(e), cur_access);
+			generate_code_impl, generator, static_cast<const cppast::cpp_##Name&>(e), cur_access);
 
 			CPPAST_DETAIL_HANDLE(file)
 			CPPAST_DETAIL_HANDLE(class)
+			CPPAST_DETAIL_HANDLE(enum)
 		}
 		return true;
 	}

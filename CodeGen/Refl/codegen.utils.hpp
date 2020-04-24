@@ -25,6 +25,23 @@ namespace Sakura::refl
 	using output = code_generator::output;
 	using cpp_member_variable = cppast::cpp_member_variable;
 
+	struct ReflField
+	{
+		std::string name;//8
+		std::string type;//8 16
+		uint32_t offset;// 4 24
+		std::unordered_map<std::string, std::string> fieldMetas = {};
+	};
+	struct ReflUnit
+	{
+		std::string unitName;
+		std::unordered_map<std::string, std::string> unitMetas;
+		std::unordered_map<std::string, ReflField> fieldsMap;
+		std::unordered_map<std::string, ReflField> staticFieldsMap;
+		std::unordered_map<std::string, ReflField> methodsMap;
+		std::unordered_map<std::string, ReflField> staticMethodsMap;
+	};
+
 	namespace detail
 	{
 		inline void comma(const code_generator::output& output)
@@ -68,6 +85,106 @@ namespace Sakura::refl
 			output << keyword("inline") << cppast::whitespace << keyword("static")
 				<< cppast::whitespace << keyword("const")
 				<< cppast::whitespace << keyword("constexpr") << cppast::whitespace;
+		}
+
+		enum FieldSet
+		{
+			E_FIELDS,
+			E_STATIC_FIELDS,
+			E_METHODS,
+			E_STATIC_METHODS,
+			E_ENUM_VALUES
+		};
+
+		inline std::string GetMetaGetterName(FieldSet set)
+		{
+			switch (set)
+			{
+			case Sakura::refl::detail::E_FIELDS:
+				return "all_fields";
+			case Sakura::refl::detail::E_ENUM_VALUES:
+			case Sakura::refl::detail::E_STATIC_FIELDS:
+				return "all_static_fields";
+			case Sakura::refl::detail::E_METHODS:
+				return "all_methods";
+			case Sakura::refl::detail::E_STATIC_METHODS:
+				return "all_static_methods";
+			default:
+				break;
+			}
+		}
+
+		inline std::string GetMetaMacroGenName(FieldSet set)
+		{
+			switch (set)
+			{
+			case Sakura::refl::detail::E_FIELDS:
+				return "SFIELD_INFO";
+			case Sakura::refl::detail::E_STATIC_FIELDS:
+				return "SSTATICFIELD_INFO";
+			case Sakura::refl::detail::E_STATIC_METHODS:
+			case Sakura::refl::detail::E_METHODS:
+				return "SMETHOD_INFO";
+			case Sakura::refl::detail::E_ENUM_VALUES:
+				return "SENUM_FIELD_INFO";
+			default:
+				break;
+			}
+		}
+
+		inline auto& GetFieldMap(const ReflUnit& unit, FieldSet set)
+		{
+			switch (set)
+			{
+			case Sakura::refl::detail::E_FIELDS:
+				return unit.fieldsMap;
+			case Sakura::refl::detail::E_ENUM_VALUES:
+			case Sakura::refl::detail::E_STATIC_FIELDS:
+				return unit.staticFieldsMap;
+			case Sakura::refl::detail::E_STATIC_METHODS:
+				return unit.staticMethodsMap;
+			case Sakura::refl::detail::E_METHODS:
+				return unit.methodsMap;
+			default:
+				break;
+			}
+		}
+
+		inline void gen_all_fields(code_generator::output& output, const ReflUnit& unit,
+			FieldSet fieldSet)
+		{
+			auto fields = GetFieldMap(unit, fieldSet);
+			if (fields.size() <= 0)
+				return;
+			output << punctuation("\t");
+			inline_static_const_constexpr(output);
+			output << cppast::keyword("auto") << cppast::punctuation(" ")
+				<< cppast::identifier(GetMetaGetterName(fieldSet)) << cppast::punctuation("()\n\t{\n");
+			for (auto iter = fields.begin(); iter != fields.end(); iter++)
+			{
+				output << punctuation("\t\t") 
+					<< cppast::identifier(GetMetaMacroGenName(fieldSet)) << cppast::punctuation("(")
+					<< identifier(iter->first) << punctuation(", ")
+					//<< identifier(iter->second.type) << punctuation(", ")
+					<< identifier(unit.unitName) << punctuation(", ");
+				if (iter->second.fieldMetas.size() > 0)
+					output << cppast::identifier(iter->first + "_meta");
+				else
+					output << cppast::identifier("nullptr");
+				output << punctuation(");\n");
+			}
+			output << punctuation("\t\t") << keyword("return") << punctuation(" ")
+				<< identifier("hana::make_tuple") << punctuation("(");
+			auto i = 0u;
+			for (auto iter = fields.begin(); iter != fields.end(); iter++)
+			{
+				i++;
+				output << identifier(iter->first + "_info()");
+				if(i != fields.size())
+					output << punctuation(", ");
+				else
+					output << punctuation(");\n\t}\n");
+			}
 		}
 	}
 

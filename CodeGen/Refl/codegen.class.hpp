@@ -1,10 +1,17 @@
+/*
+ * @Author: your name
+ * @Date: 2020-04-22 00:49:46
+ * @LastEditTime: 2020-04-24 23:16:32
+ * @LastEditors: your name
+ * @Description: In User Settings Edit
+ * @FilePath: /SakuraAutoCoder/CodeGen/Refl/codegen.class.hpp
+ */
 #pragma once
 #include <cppast/cpp_class.hpp>
 #include <cppast/cpp_class_template.hpp>
 #include <cppast/code_generator.hpp>
 #include "codegen.utils.hpp"
 #include "codegen.classmember.hpp"
-
 
 using namespace std;
 

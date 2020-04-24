@@ -96,7 +96,7 @@ struct EnumInfo<Test::TestEnum>
 {
     inline static const constexpr char* GetEnumName() 
     {
-        return "TestEnum";
+        return "Test::TestEnum";
     }
     inline static const constexpr Meta::MetaPiece meta[1] = 
     {

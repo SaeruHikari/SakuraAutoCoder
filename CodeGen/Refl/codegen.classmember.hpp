@@ -1,34 +1,18 @@
 /*
  * @Author: your name
  * @Date: 2020-04-16 16:26:13
- * @LastEditTime: 2020-04-16 21:06:12
- * @LastEditors: your name
+ * @LastEditTime: 2020-04-25 01:16:34
+ * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /SakuraAutoCoder/CodeGen/Refl/codegen.classmember.hpp
  */
 #pragma once
 #include "codegen.utils.hpp"
+#include <cppast/cpp_variable.hpp>
 #include <string>
 
 namespace Sakura::refl
 {
-	struct ReflField
-	{
-		std::string name;//8
-		std::string type;//8 16
-		uint32_t offset;// 4 24
-		std::unordered_map<std::string, std::string> fieldMetas = {};
-	};
-	struct ReflUnit
-	{
-		std::string unitName;
-		std::unordered_map<std::string, std::string> unitMetas;
-		std::unordered_map<std::string, ReflField> fieldsMap;
-		std::unordered_map<std::string, ReflField> staticFieldsMap;
-		std::unordered_map<std::string, ReflField> methodsMap;
-		std::unordered_map<std::string, ReflField> staticMethodsMap;
-	};
-
 	namespace detail
 	{
 		inline void gen_meta(code_generator::output& output, std::string prefix,
@@ -36,14 +20,15 @@ namespace Sakura::refl
 		{
 			if (data.size() > 0)
 			{
+				output << punctuation("\t");
 				detail::inline_static_const_constexpr(output);
 				output << identifier("Meta::MetaPiece") << cppast::whitespace << identifier(prefix + "meta")
-					<< punctuation("[") << cppast::int_literal(std::to_string(data.size())) << punctuation("] = \n{");
+					<< punctuation("[") << cppast::int_literal(std::to_string(data.size())) << punctuation("] = \n\t{");
 				auto i = 0u;
 				for (auto iter = data.begin(); iter != data.end(); iter++)
 				{
 					i++;
-					output << punctuation("\n    {") 
+					output << punctuation("\n\t\t{") 
 						<< cppast::string_literal("\"" + iter->first + "\"")
 						<< punctuation(", ") 
 						<< ((iter->second.size() > 0) ?
@@ -53,24 +38,51 @@ namespace Sakura::refl
 					if (i != data.size())
 						output << punctuation(",");
 				}
-				output << punctuation("\n};\n");
+				output << punctuation("\n\t};\n\n");
 			}
 		}
 
 		inline void generate_var_meta(code_generator::output& output,
-			const cpp_member_variable& var, const ReflField& field)
+			const cpp_entity& var, const ReflField& field)
 		{
 			gen_meta(output, var.name() + "_", field.fieldMetas);
+		}
+
+		inline void collect_field_meta(ReflField& field, const cppast::cpp_entity& member)
+		{
+			field.name = member.name().c_str();
+			field.type
+				= cppast::to_string(((const cpp_member_variable&)member).type());
+			for (auto i = 0; i < member.attributes().size(); i++)
+			{
+				std::pair<std::string, std::string> attrib{ member.attributes()[i].name() , "" };
+				if (member.attributes()[i].arguments().has_value())
+					attrib.second = member.attributes()[i].arguments().value().as_string();
+				field.fieldMetas.insert(attrib);
+			}
+		}
+
+		inline void collect_static_field_meta(ReflField& field, const cppast::cpp_entity& member)
+		{
+			field.name = member.name().c_str();
+			field.type
+				= cppast::to_string(((const cppast::cpp_variable&)member).type());
+			for (auto i = 0; i < member.attributes().size(); i++)
+			{
+				std::pair<std::string, std::string> attrib{ member.attributes()[i].name() , "" };
+				if (member.attributes()[i].arguments().has_value())
+					attrib.second = member.attributes()[i].arguments().value().as_string();
+				field.fieldMetas.insert(attrib);
+			}
 		}
 	}
 
 	using cpp_member_variable = cppast::cpp_member_variable;
 
 	inline bool generate_meta_class_member_varable(code_generator::output& output,
-		const cpp_member_variable& var, const ReflField& field)
+		const cpp_entity& var, const ReflField& field)
 	{
 		detail::generate_var_meta(output, var, field);
-		output << cppast::punctuation("\n");
 		return true;
 	}
 }
