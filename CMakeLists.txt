@@ -38,10 +38,10 @@ add_executable(
 	CodeGen/Refl/codegen.class.hpp
 	CodeGen/Refl/codegen.class.cpp
 	)
-#add_executable(
-#	ReflTest
-#	CodeGen/UnitTest/Test.cpp
-#)
+add_executable(
+	ReflTest
+	CodeGen/UnitTest/Test.cpp
+)
 target_link_libraries(SReflCodeGen PUBLIC cppast ${CLANG_LIBS})
 
 

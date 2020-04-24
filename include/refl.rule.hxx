@@ -1,7 +1,7 @@
 ﻿/*
  * @Author: your name
  * @Date: 2020-04-04 12:32:09
- * @LastEditTime: 2020-04-16 22:31:47
+ * @LastEditTime: 2020-04-24 17:04:28
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \undefinedd:\Coding\SakuraAutoCoder\CodeGen\refl.rule.hxx
@@ -34,30 +34,65 @@ namespace Sakura::refl
 	class IType;
 }
 
-#define SFIELD_INFO(NAME, T, MOTHER_BOARD, ...) \
+#define SFIELD_INFO(NAME, MOTHER_BOARD, ...) \
 	struct NAME##_info{\
 		constexpr NAME##_info() = default;\
 		Field fd = Field{\
-			#NAME, #T, offsetof(MOTHER_BOARD, NAME), __VA_ARGS__ };\
+			#NAME,\
+			Sakura::refl::decay_type_name<decltype(std::declval<MOTHER_BOARD>().NAME)>(),\
+			offsetof(MOTHER_BOARD, NAME), __VA_ARGS__ };\
 		decltype(&MOTHER_BOARD::NAME) ptr = &MOTHER_BOARD::NAME;\
 	};
 
-#define SMETHOD_INFO(NAME, T, MOTHER_BOARD, ...) \
+#define SMETHOD_INFO(NAME, MOTHER_BOARD, ...) \
 	struct NAME##_info{\
 		constexpr NAME##_info() = default;\
-		Field fd = Field{#NAME, #T, 0, __VA_ARGS__ };\
+		Field fd = Field{#NAME,\
+		Sakura::refl::decay_type_name<decltype(&MOTHER_BOARD::NAME)>(),\
+		0, __VA_ARGS__ };\
 		decltype(&MOTHER_BOARD::NAME) ptr = &MOTHER_BOARD::NAME;\
 	};
 
-#define SSTATICFIELD_INFO(NAME, T, MOTHER_BOARD, ...)  \
+#define SSTATICFIELD_INFO(NAME, MOTHER_BOARD, ...)  \
 	struct NAME##_info{\
 		constexpr NAME##_info() = default;\
-		Field fd = Field{#NAME, #T, 0, __VA_ARGS__ };\
+		Field fd = Field{#NAME,\
+		Sakura::refl::decay_type_name<decltype(&MOTHER_BOARD::NAME)>(),\
+		0, __VA_ARGS__ };\
 		decltype(&MOTHER_BOARD::NAME) ptr = &MOTHER_BOARD::NAME;\
 	};
 
 namespace Sakura::refl
 {
+	template <typename T>
+	constexpr std::string_view type_name() 
+	{
+		#if defined(__clang__)
+		constexpr std::string_view prefix =
+			"std::string_view Sakura::refl::type_str() [T = ";
+		constexpr std::string_view suffix = "]";
+		#elif defined(_MSC_VER)
+		constexpr std::string_view prefix =
+			"class std::basic_string_view<char,struct std::char_traits<char> > "
+			"__cdecl Sakura::refl::type_str<";
+		constexpr std::string_view suffix = ">(void)";
+		#else
+		constexpr std::string_view prefix =
+			"constexpr std::string_view Sakura::refl::type_str() [with T = ";
+		constexpr std::string_view suffix =
+			"; std::string_view = std::basic_string_view<char>]";
+		#endif
+		auto sig = std::string_view{__PRETTY_FUNCTION__};
+		sig.remove_prefix(prefix.size());
+		sig.remove_suffix(suffix.size());
+		return sig;
+	}
+
+	template<typename T>
+	constexpr std::string_view decay_type_name()
+	{
+		return type_name<std::decay_t<T>>();
+	}
 	// Object is a class similar in nature to std::any, only it does not require
 	// C++17 and does not require stored objects to be copyable.
 
@@ -173,7 +208,7 @@ namespace Sakura::refl
 	struct Field
 	{
 		const char* name;//8
-		const char* type;//8 16
+		std::string_view type;
 		uint32_t offset;// 4 24
 		Meta metas;
 	};
@@ -280,10 +315,10 @@ namespace Sakura::refl
 		};
 		inline static constexpr const auto all_fields()
 		{
-			SFIELD_INFO(name, const char*, Field, nullptr)
-			SFIELD_INFO(type, const char*, Field, nullptr)
-			SFIELD_INFO(offset, uint32_t, Field, nullptr)
-			SFIELD_INFO(metas, meta, Field, nullptr)
+			SFIELD_INFO(name, Field, nullptr)
+			SFIELD_INFO(type, Field, nullptr)
+			SFIELD_INFO(offset, Field, nullptr)
+			SFIELD_INFO(metas, Field, nullptr)
 			return hana::make_tuple(name_info(), type_info(), offset_info(), metas_info());
 		}
 	};

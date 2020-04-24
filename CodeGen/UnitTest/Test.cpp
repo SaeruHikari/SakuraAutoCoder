@@ -69,11 +69,10 @@ int main(void)
 	TestComponentWrap testCompWrap;
 	SClass<std::decay<decltype(testComp)>::type>::ForEachField(testComp,
 		Sakura::overload(
-			[](const std::string& field, const Field& meta) {
-				std::cout << "string: " << meta.name << ": " << field << std::endl;
-			},
 			[](auto&& field, const Field& meta) {
-				std::cout << meta.name << ": " << field << std::endl;
+				std::cout
+					<< meta.type << " - "
+					<< meta.name << ": " << field << std::endl;
 			}));
 
 	std::cout << std::endl << std::endl;

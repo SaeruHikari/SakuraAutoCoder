@@ -1,4 +1,4 @@
-//generated time:1587661972
+//generated time:1587715834
 //generated end
 
 
@@ -41,18 +41,18 @@ inline static const constexpr Meta::MetaPiece Method_meta[1] =
 
 inline static const constexpr auto all_fields()
 {
-    SFIELD_INFO(attrib, float, TestComponent, attrib_meta);
-    SFIELD_INFO(name, int, TestComponent, name_meta);
+    SFIELD_INFO(attrib, TestComponent, attrib_meta);
+    SFIELD_INFO(name, TestComponent, name_meta);
     return hana::make_tuple(attrib_info(), name_info());
 }
 inline static const constexpr auto all_static_fields()
 {
-    SSTATICFIELD_INFO(staticAttrib, float const, TestComponent, staticAttrib_meta);
+    SSTATICFIELD_INFO(staticAttrib, TestComponent, staticAttrib_meta);
     return hana::make_tuple(staticAttrib_info());
 }
 inline static const constexpr auto all_methods()
 {
-    SMETHOD_INFO(Method, method, TestComponent, Method_meta);
+    SMETHOD_INFO(Method, TestComponent, Method_meta);
     return hana::make_tuple(Method_info());
 }
 
@@ -77,13 +77,13 @@ inline static const constexpr Meta::MetaPiece comp_meta[1] =
 
 inline static const constexpr auto all_fields()
 {
-    SFIELD_INFO(comp, TestComponent, TestComponentWrap, comp_meta);
-    SFIELD_INFO(wtf, float, TestComponentWrap, nullptr);
+    SFIELD_INFO(comp, TestComponentWrap, comp_meta);
+    SFIELD_INFO(wtf, TestComponentWrap, nullptr);
     return hana::make_tuple(comp_info(), wtf_info());
 }
 inline static const constexpr auto all_static_fields()
 {
-    SSTATICFIELD_INFO(statComp, TestComponent const, TestComponentWrap, nullptr);
+    SSTATICFIELD_INFO(statComp, TestComponentWrap, nullptr);
     return hana::make_tuple(statComp_info());
 }
 

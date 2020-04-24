@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2020-04-23 14:18:01
- * @LastEditTime: 2020-04-23 14:48:36
+ * @LastEditTime: 2020-04-24 01:56:04
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /SakuraAutoCoder/include/sakura_cpp.parser.cpp
@@ -12,7 +12,7 @@
 namespace Sakura::parser
 {
     void sakura_cpp_config(cppast::libclang_compile_config& config, 
-        const cxxopts::ParseResult& options)
+        const cxxopts::ParseResult& options) noexcept
     {
         if (options.count("database_dir"))
         {
@@ -75,7 +75,7 @@ namespace Sakura::parser
     // parse a file
     std::unique_ptr<cppast::cpp_file> parse_file(const cppast::libclang_compile_config& config,
         const cppast::diagnostic_logger& logger,
-        const std::string& filename, bool fatal_error)
+        const std::string& filename, bool fatal_error) noexcept
     {
         // the entity index is used to resolve cross references in the AST
         // we don't need that, so it will not be needed afterwards

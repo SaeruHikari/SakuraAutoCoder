@@ -3,7 +3,7 @@
 // found in the top-level directory of this distribution.
 
 #include <cppast/libclang_parser.hpp>
-
+#include <iostream>
 #include <cstring>
 #include <fstream>
 #include <vector>
@@ -520,7 +520,7 @@ detail::cxtranslation_unit get_cxunit(const diagnostic_logger& logger, const det
 {
     CXUnsavedFile file{path, source.c_str(), static_cast<unsigned long>(source.length())};
     auto args = get_arguments(config);
-
+    
     CXTranslationUnit tu;
     auto              flags = CXTranslationUnit_Incomplete | CXTranslationUnit_KeepGoing
                  | CXTranslationUnit_DetailedPreprocessingRecord;
@@ -551,7 +551,8 @@ detail::cxtranslation_unit get_cxunit(const diagnostic_logger& logger, const det
         //}
     }
     
-    print_diagnostics(logger, tu);
+    if(false)
+        print_diagnostics(logger, tu);
 
     return detail::cxtranslation_unit(tu);
 }

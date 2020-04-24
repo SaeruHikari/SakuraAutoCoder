@@ -460,10 +460,6 @@ clang_preprocess_result clang_preprocess_impl(const libclang_compile_config& c,
     else
     {
         std::ifstream t(full_path.c_str());  
-        //std::stringstream buffer;  
-        //buffer << t.rdbuf();  
-        //std::string contents(buffer.str());  
-        //result.file = std::move(contents); 
         std::string line;
         std::string prefix = "#include";
         while (std::getline(t, line)) 
@@ -476,7 +472,6 @@ clang_preprocess_result clang_preprocess_impl(const libclang_compile_config& c,
             }
         }
         t.close();
-        std::cout << result.file;
     }
 
     return result;
@@ -1096,11 +1091,12 @@ detail::preprocessor_output detail::preprocess(const libclang_compile_config& co
 {
     detail::preprocessor_output                  result;
     std::unordered_map<std::string, std::string> indirect_includes;
-
+    
     auto preprocessed = clang_preprocess(config, path, logger);
 
     position p(ts::ref(result.source), preprocessed.file.c_str());
     ts::flag in_string(false), in_char(false), first_line(true);
+
     while (p)
     {
         auto next = std::strpbrk(p.ptr(), R"(\"'#/)"); // look for \, ", ', # or /

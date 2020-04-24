@@ -134,7 +134,7 @@ namespace Sakura::refl
 			{
 				output << punctuation("    ") << cppast::identifier(GetMetaMacroGenName(fieldSet)) << cppast::punctuation("(")
 					<< identifier(iter->first) << punctuation(", ")
-					<< identifier(iter->second.type) << punctuation(", ")
+					//<< identifier(iter->second.type) << punctuation(", ")
 					<< identifier(unit.unitName) << punctuation(", ");
 				if (iter->second.fieldMetas.size() > 0)
 					output << cppast::identifier(iter->first + "_meta");
