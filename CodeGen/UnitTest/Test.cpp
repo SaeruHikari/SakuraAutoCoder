@@ -1,7 +1,7 @@
 ﻿/*
  * @Author: your name
  * @Date: 2020-04-22 00:49:46
- * @LastEditTime: 2020-04-24 22:47:16
+ * @LastEditTime: 2020-04-25 12:20:41
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /SakuraAutoCoder/CodeGen/UnitTest/Test.cpp
@@ -23,9 +23,10 @@ decltype(auto) call(F f, T (&t)[N])
     return call_impl(f, t, std::make_index_sequence<N>{});   
 }
 int arr[4] = {1, 2, 3, 4};
-
+has_member(attrib);
 int main(void)
 {
+	constexpr bool value = has_member_attrib<Test::TestComponent>::value;
 	std::cout << call([](int, int, int, int){return 5;}, arr);
 	Test::TestComponent testComp;
 	Test::TestComponentWrap testCompWrap;
@@ -33,8 +34,8 @@ int main(void)
 		Sakura::overload(
 			[](auto&& field, const Field& meta) {
 				std::cout
-					<< meta.type << " - "
-					<< meta.name << ": " << field << std::endl;
+					<< meta.type << " - ";
+					//<< meta.name << ": " << field << std::endl;
 			}));
 
 	std::cout << std::endl << std::endl;
@@ -48,6 +49,9 @@ int main(void)
 			},
 			[](Test::TestComponent* field, const Field& meta) {
 				std::cout << "TestCompPtr" << std::endl;
+			},
+			[](const intvec& v, const Field& meta){
+				
 			}));
 
 	std::cout << std::endl << std::endl;
@@ -58,6 +62,9 @@ int main(void)
 			},
 			[](const std::string& field, const Field& meta) {
 				std::cout << meta.name << ": " << field << std::endl;
+			},
+			[](const intvec& v, const Field& meta){
+				
 			}));
 	
 	SClass<std::decay<decltype(testComp)>::type>::ForEachMethod(testComp,

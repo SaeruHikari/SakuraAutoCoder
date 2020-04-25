@@ -142,6 +142,7 @@ namespace Sakura::refl
 			// Iterate
 			for (auto& member : c)
 			{
+				std::cout << member.name() << std::endl;
 				if (member.kind() == cpp_entity_kind::member_variable_t)
 				{
 					detail::collect_field_meta(reflUnit.fieldsMap[member.name()], member);

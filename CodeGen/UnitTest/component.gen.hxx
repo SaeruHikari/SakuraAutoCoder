@@ -1,4 +1,4 @@
-//generated time:1587752031
+//generated time:1587786138
 //generated end
 
 
@@ -25,6 +25,11 @@ struct ClassInfo<Test::TestComponent>
 		{"meta", "SaeruHikari"}
 	};
 
+	inline static const constexpr Meta::MetaPiece testContainer_meta[1] = 
+	{
+		{"container", "This is a container!"}
+	};
+
 	inline static const constexpr Meta::MetaPiece name_meta[1] = 
 	{
 		{"meta", "Fxxk ISO C++23"}
@@ -44,7 +49,8 @@ struct ClassInfo<Test::TestComponent>
 	{
 		SFIELD_INFO(attrib, Test::TestComponent, attrib_meta);
 		SFIELD_INFO(name, Test::TestComponent, name_meta);
-		return hana::make_tuple(attrib_info(), name_info());
+		SFIELD_INFO(testContainer, Test::TestComponent, testContainer_meta);
+		return hana::make_tuple(attrib_info(), name_info(), testContainer_info());
 	}
 	inline static const constexpr auto all_static_fields()
 	{

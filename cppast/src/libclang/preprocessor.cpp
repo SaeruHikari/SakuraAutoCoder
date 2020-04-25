@@ -435,9 +435,9 @@ clang_preprocess_result clang_preprocess_impl(const libclang_compile_config& c,
             else
                 diagnostic.push_back(*str);
     };
-    if(false)
+    if(true)
     {
-        auto         cmd = get_preprocess_command(c, full_path.c_str(), macro_path);
+        auto cmd = get_preprocess_command(c, full_path.c_str(), macro_path);
         tpl::Process process(cmd, "",
                             [&](const char* str, std::size_t n) {
                                 for (auto ptr = str; ptr != str + n; ++ptr)
@@ -1150,9 +1150,9 @@ detail::preprocessor_output detail::preprocess(const libclang_compile_config& co
                                     result.macros.end());
             }
         }
-        else if (auto include = parse_include(p, true))
+        else if (auto include = parse_include(p, false))
         {
-            /*if (p.write_enabled())
+            if (p.write_enabled())
             {
                 if (logger.is_verbose())
                     logger.log("preprocessor",
@@ -1162,7 +1162,7 @@ detail::preprocessor_output detail::preprocess(const libclang_compile_config& co
                                                  "'"));
 
                 result.includes.push_back(std::move(include.value()));
-            }*/
+            }
         }
         else if (bump_pragma(p))
         {

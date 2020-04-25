@@ -1,23 +1,29 @@
 /*
  * @Author: your name 
  * @Date: 2020-04-04 11:12:12
- * @LastEditTime: 2020-04-25 02:08:13
+ * @LastEditTime: 2020-04-25 11:47:50
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit 
  * @FilePath: \undefinedd :\Coding\SakuraAutoCoder\CodeGen\component.refl.hxx
  */    
 #pragma once          
 #include <iostream>
-#include <string>  
-   
+#include <string>   
+#include <vector>
+
+typedef std::vector<float>* intvec;
+template<> inline const constexpr bool Sakura::refl::isAtomic<intvec>(){return true;}
 namespace Test
 {
 	struct [[refl]] [[descriptions("This is a test component")]] TestComponent
-	{  
+	{   
 		[[meta("SaeruHikari")]]
 		float attrib = 123.f;
+		
+		[[container("This is a container!")]]
+		intvec testContainer = nullptr;
 
-		[[meta("Fxxk ISO C++23")]] 
+		[[meta("Fxxk ISO C++23")]]
 		std::string name = "TestComp";
 	
 		[[meta("This is a static attribute")]]
@@ -27,15 +33,15 @@ namespace Test
 		void Method(TestComponent* inRef)
 		{
 			std::cout << std::endl << "static method call!" << std::endl;
-		};
-	};
-	 
+		}; 
+	}; 
+	
 	struct [[refl]] TestComponentWrap
 	{     
 		TestComponent comp [[description("Test wrapping of reflection component")]];
-		inline static const TestComponent statComp = { 14221.f, "Stat" };
+		inline static const TestComponent statComp;
 		float wtf = 155.f;  
-	};
+	}; 
 	 
 	enum class [[refl]] TestEnum : uint8_t 
 	{     

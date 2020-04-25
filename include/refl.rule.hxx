@@ -1,7 +1,7 @@
 ﻿/*
  * @Author: your name
  * @Date: 2020-04-04 12:32:09
- * @LastEditTime: 2020-04-24 22:46:11
+ * @LastEditTime: 2020-04-25 12:32:08
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \undefinedd:\Coding\SakuraAutoCoder\CodeGen\refl.rule.hxx
@@ -33,6 +33,15 @@ namespace Sakura::refl
 	class Reference;
 	class IType;
 }
+
+#define has_member(s)\
+template<typename ____TTTT>\
+struct has_member_##s{\
+    template <typename T_T>static auto check(T_T)->typename std::decay<decltype(T_T::s)>::type;\
+    static void check(...);\
+    using type=decltype(check(std::declval<____TTTT>()));\
+    enum{value=!std::is_void<type>::value};\
+};
 
 #define SFIELD_INFO(NAME, MOTHER_BOARD, ...) \
 	struct NAME##_info{\
@@ -427,6 +436,9 @@ namespace Sakura::refl
 				});
 		}
 
+		has_member(all_fields);
+		has_member(all_static_fields);
+
 		template <bool atomic, typename V, typename Fn, typename Tuple>
 		inline static constexpr void __for_each_field_impl(Tuple&& tup, V&& value, Fn&& fn)
 		{
@@ -436,10 +448,14 @@ namespace Sakura::refl
 					using ClassName_C = std::decay_t<decltype(value.*(field_schema.ptr))>;
 					if constexpr (!isAtomic<ClassName_C>() && atomic)
 					{
+						static_assert(has_member_all_fields<ClassInfo<ClassName_C>>::value);
 						SClass<ClassName_C>::ForEachFieldAtomic(std::forward<ClassName_C>(value.*(field_schema.ptr)), fn);
 						constexpr int leng = hana::length(ClassInfo<ClassName_C>::all_static_fields());
 						if constexpr (leng > 0)
+						{
+							static_assert(has_member_all_static_fields<ClassInfo<ClassName_C>>::value);
 							SClass<ClassName_C>::ForEachStaticFieldAtomic(fn);
+						}
 					}
 					else
 					{
@@ -527,18 +543,13 @@ namespace Sakura::refl
 		}
 
 
+
 		// Dynamic Part
 		inline static const Reference GetField(const Reference& o, const std::string& fieldName)
 		{
 			return GetFieldT<ClassName>(o, fieldName);
 		}
-/*
-		template <typename T>
-		T& GetT() const
-		{
-			return *static_cast<T*>(data_);
-		}
-*/
+
 		template<typename TT>
 		inline static const TT GetField(const Reference& o, const std::string& fieldName)
 		{
