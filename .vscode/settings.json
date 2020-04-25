@@ -75,7 +75,8 @@
         "vector": "cpp",
         "__functional_03": "cpp",
         "numeric": "cpp",
-        "random": "cpp"
+        "random": "cpp",
+        "memory_resource": "cpp"
     },
     "C_Cpp.default.configurationProvider": "vector-of-bool.cmake-tools"
 }

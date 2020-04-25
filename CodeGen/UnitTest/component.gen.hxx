@@ -1,4 +1,4 @@
-//generated time:1587786138
+//generated time:1587838964
 //generated end
 
 
@@ -45,21 +45,21 @@ struct ClassInfo<Test::TestComponent>
 		{"meta", "Can't wait to use compile-time-reflection"}
 	};
 
+	SFIELD_INFO(attrib, Test::TestComponent, attrib_meta);
+	SFIELD_INFO(name, Test::TestComponent, name_meta);
+	SFIELD_INFO(testContainer, Test::TestComponent, testContainer_meta);
 	inline static const constexpr auto all_fields()
 	{
-		SFIELD_INFO(attrib, Test::TestComponent, attrib_meta);
-		SFIELD_INFO(name, Test::TestComponent, name_meta);
-		SFIELD_INFO(testContainer, Test::TestComponent, testContainer_meta);
 		return hana::make_tuple(attrib_info(), name_info(), testContainer_info());
 	}
+	SSTATICFIELD_INFO(staticAttrib, Test::TestComponent, staticAttrib_meta);
 	inline static const constexpr auto all_static_fields()
 	{
-		SSTATICFIELD_INFO(staticAttrib, Test::TestComponent, staticAttrib_meta);
 		return hana::make_tuple(staticAttrib_info());
 	}
+	SMETHOD_INFO(Method, Test::TestComponent, Method_meta);
 	inline static const constexpr auto all_methods()
 	{
-		SMETHOD_INFO(Method, Test::TestComponent, Method_meta);
 		return hana::make_tuple(Method_info());
 	}
 };
@@ -81,15 +81,15 @@ struct ClassInfo<Test::TestComponentWrap>
 		{"description", "Test wrapping of reflection component"}
 	};
 
+	SFIELD_INFO(comp, Test::TestComponentWrap, comp_meta);
+	SFIELD_INFO(wtf, Test::TestComponentWrap, nullptr);
 	inline static const constexpr auto all_fields()
 	{
-		SFIELD_INFO(comp, Test::TestComponentWrap, comp_meta);
-		SFIELD_INFO(wtf, Test::TestComponentWrap, nullptr);
 		return hana::make_tuple(comp_info(), wtf_info());
 	}
+	SSTATICFIELD_INFO(statComp, Test::TestComponentWrap, nullptr);
 	inline static const constexpr auto all_static_fields()
 	{
-		SSTATICFIELD_INFO(statComp, Test::TestComponentWrap, nullptr);
 		return hana::make_tuple(statComp_info());
 	}
 };
@@ -121,11 +121,11 @@ struct EnumInfo<Test::TestEnum>
 		{"enum", "This is enum three"}
 	};
 
+	SENUM_FIELD_INFO(E_ONE, Test::TestEnum, E_ONE_meta);
+	SENUM_FIELD_INFO(E_TWO, Test::TestEnum, E_TWO_meta);
+	SENUM_FIELD_INFO(E_THREE, Test::TestEnum, E_THREE_meta);
 	inline static const constexpr auto all_static_fields()
 	{
-		SENUM_FIELD_INFO(E_ONE, Test::TestEnum, E_ONE_meta);
-		SENUM_FIELD_INFO(E_TWO, Test::TestEnum, E_TWO_meta);
-		SENUM_FIELD_INFO(E_THREE, Test::TestEnum, E_THREE_meta);
 		return hana::make_tuple(E_ONE_info(), E_TWO_info(), E_THREE_info());
 	}
 };

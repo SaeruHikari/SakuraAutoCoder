@@ -1,7 +1,7 @@
 /*
  * @Author: your name 
  * @Date: 2020-04-04 11:12:12
- * @LastEditTime: 2020-04-25 11:47:50
+ * @LastEditTime: 2020-04-25 14:20:59
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit 
  * @FilePath: \undefinedd :\Coding\SakuraAutoCoder\CodeGen\component.refl.hxx
@@ -11,8 +11,11 @@
 #include <string>   
 #include <vector>
 
-typedef std::vector<float>* intvec;
-template<> inline const constexpr bool Sakura::refl::isAtomic<intvec>(){return true;}
+namespace Sakura::refl
+{
+	template<> inline const constexpr bool isAtomic<std::vector<float>>(){return true;}
+}
+
 namespace Test
 {
 	struct [[refl]] [[descriptions("This is a test component")]] TestComponent
@@ -21,7 +24,7 @@ namespace Test
 		float attrib = 123.f;
 		
 		[[container("This is a container!")]]
-		intvec testContainer = nullptr;
+		std::vector<float> testContainer = {1.f, 2.f, 3.f, 4.f};
 
 		[[meta("Fxxk ISO C++23")]]
 		std::string name = "TestComp";

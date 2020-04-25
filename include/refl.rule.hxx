@@ -1,7 +1,7 @@
 ﻿/*
  * @Author: your name
  * @Date: 2020-04-04 12:32:09
- * @LastEditTime: 2020-04-25 12:32:08
+ * @LastEditTime: 2020-04-26 02:23:59
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \undefinedd:\Coding\SakuraAutoCoder\CodeGen\refl.rule.hxx
@@ -18,7 +18,7 @@
 #include <vector>
 #include <cassert>
 
-#include "boost/hana.hpp"
+#include <boost/hana.hpp>
 namespace hana = boost::hana;
 using namespace hana::literals;
 using namespace std;
@@ -32,6 +32,81 @@ namespace Sakura::refl
 	class Object;
 	class Reference;
 	class IType;
+	namespace detail 
+	{
+		template<typename T> struct declval_helper { static T value; };
+
+		template<typename T, typename Z, Z T::*MPtr>
+		struct offset_helper 
+		{
+			using TV = declval_helper<T>;
+			char for_sizeof[
+				(char *)&(TV::value.*MPtr) -
+				(char *)&TV::value
+			];
+		};
+
+		template<typename T, std::size_t N>
+		constexpr std::size_t arraySize(T(&)[N]) noexcept
+		{
+			return N;
+		}
+
+		constexpr std::size_t arraySize(std::nullptr_t nul) noexcept
+		{
+			return 0;
+		}
+
+		template <typename F, typename T, typename... Args, std::size_t N, std::size_t... Idx>
+		constexpr decltype(auto) _arr_call_impl(F f, T(&t)[N], std::index_sequence<Idx...>,
+			Args&&... args) 
+		{
+			return f(args..., t[Idx]...);
+		}
+		template <typename F, typename T, typename... Args, std::size_t N>
+		constexpr decltype(auto) arr_unfold_call(F f, T (&t)[N], Args&&... args) 
+		{
+			return _arr_call_impl(f, t, std::make_index_sequence<N>{}, args...);   
+		}
+
+		template<typename F, typename T, std::size_t N, std::size_t... Idx>
+		constexpr bool matching_impl(const std::string_view tag, F&& func,
+			T(&t)[N], std::index_sequence<Idx...>)
+		{
+			return (func(tag, t[Idx].title)|...);
+		}
+		template <typename F, typename T, std::size_t N>
+		constexpr decltype(auto) matching(const std::string_view tag, 
+			F&& f, T (&t)[N]) 
+		{
+			return matching_impl(tag, f, t, std::make_index_sequence<N>{});   
+		}
+		template <typename F>
+		constexpr decltype(auto) matching(const std::string_view tag, 
+			F&& f, void* npt) 
+		{
+			return false;   
+		}
+
+		template<typename T>
+		constexpr bool has_tag(const std::string_view tag, T&& src)
+		{
+			return src == tag;
+		}
+
+		template<typename T>
+		constexpr bool has_tag_series(const std::string_view tag, T&& src)
+		{
+			return src.starts_with(tag);
+		}
+	}
+
+	template<typename T, typename Z, Z T::*MPtr>
+	constexpr int offset_of() 
+	{
+		return sizeof(detail::offset_helper<T, Z, MPtr>::for_sizeof);
+	}
+
 }
 
 #define has_member(s)\
@@ -43,40 +118,55 @@ struct has_member_##s{\
     enum{value=!std::is_void<type>::value};\
 };
 
-#define SFIELD_INFO(NAME, MOTHER_BOARD, ...) \
-	struct NAME##_info{\
+#define SFIELD_INFO(NAME, MOTHER_BOARD, array, ...) \
+	static struct NAME##_info{\
 		constexpr NAME##_info() = default;\
-		Field fd = Field{\
-			#NAME,\
+		const FieldWithMeta<Sakura::refl::detail::arraySize(array)> fd =\
+		FieldWithMeta<Sakura::refl::detail::arraySize(array)>(#NAME,\
 			Sakura::refl::decay_type_name<decltype(std::declval<MOTHER_BOARD>().NAME)>(),\
-			offsetof(MOTHER_BOARD, NAME), __VA_ARGS__ };\
+			offsetof(MOTHER_BOARD, NAME), array);\
+		template<typename F>\
+		constexpr static const bool matching(const std::string_view tag, F&& func)\
+		{return Sakura::refl::detail::matching(tag, func, array);}\
 		decltype(&MOTHER_BOARD::NAME) ptr = &MOTHER_BOARD::NAME;\
 	};
 
-#define SMETHOD_INFO(NAME, MOTHER_BOARD, ...) \
+#define SMETHOD_INFO(NAME, MOTHER_BOARD, array, ...) \
 	struct NAME##_info{\
 		constexpr NAME##_info() = default;\
-		Field fd = Field{#NAME,\
+		const FieldWithMeta<Sakura::refl::detail::arraySize(array)> fd = \
+		FieldWithMeta<Sakura::refl::detail::arraySize(array)>(#NAME,\
 		Sakura::refl::decay_type_name<decltype(&MOTHER_BOARD::NAME)>(),\
-		0, __VA_ARGS__ };\
+		0, array);\
+		template<typename F>\
+		constexpr static const bool matching(const std::string_view tag, F&& func)\
+		{return Sakura::refl::detail::matching(tag, func, array);}\
 		decltype(&MOTHER_BOARD::NAME) ptr = &MOTHER_BOARD::NAME;\
 	};
 
-#define SSTATICFIELD_INFO(NAME, MOTHER_BOARD, ...)  \
+#define SSTATICFIELD_INFO(NAME, MOTHER_BOARD, array, ...)  \
 	struct NAME##_info{\
 		constexpr NAME##_info() = default;\
-		Field fd = Field{#NAME,\
+		const FieldWithMeta<Sakura::refl::detail::arraySize(array)> fd = \
+		FieldWithMeta<Sakura::refl::detail::arraySize(array)>(#NAME,\
 		Sakura::refl::decay_type_name<decltype(&MOTHER_BOARD::NAME)>(),\
-		0, __VA_ARGS__ };\
+		0, array);\
+		template<typename F>\
+		constexpr static const bool matching(const std::string_view tag, F&& func)\
+		{return Sakura::refl::detail::matching(tag, func, array);}\
 		decltype(&MOTHER_BOARD::NAME) ptr = &MOTHER_BOARD::NAME;\
 	};
 
-#define SENUM_FIELD_INFO(NAME, MOTHER_BOARD, ...) \
+#define SENUM_FIELD_INFO(NAME, MOTHER_BOARD, array, ...) \
 	struct NAME##_info{\
 		constexpr NAME##_info() = default;\
-		Field fd = Field{#NAME,\
+		const FieldWithMeta<Sakura::refl::detail::arraySize(array)> fd = \
+		FieldWithMeta<Sakura::refl::detail::arraySize(array)>(#NAME,\
 		Sakura::refl::decay_type_name<MOTHER_BOARD>(),\
-		0, __VA_ARGS__};\
+		0, array);\
+		template<typename F>\
+		constexpr static const bool matching(const std::string_view tag, F&& func)\
+		{return Sakura::refl::detail::matching(tag, func, array);}\
 		MOTHER_BOARD val = MOTHER_BOARD::NAME;\
 	};
 
@@ -87,7 +177,7 @@ namespace Sakura::refl
 	{
 		#if defined(__clang__)
 		constexpr std::string_view prefix =
-			"std::string_view Sakura::refl::type_str() [T = ";
+			"std::string_view Sakura::refl::type_str() [T =  ";
 		constexpr std::string_view suffix = "]";
 		#elif defined(_MSC_VER)
 		constexpr std::string_view prefix =
@@ -180,17 +270,6 @@ namespace Sakura::refl
 			}
 			return _Val;
 		}
-
-		template<typename T, std::size_t N>
-		constexpr std::size_t arraySize(T(&)[N]) noexcept
-		{
-			return N;
-		}
-
-		constexpr std::size_t arraySize(std::nullptr_t nul) noexcept
-		{
-			return 0;
-		}
 	}
 
 
@@ -201,8 +280,8 @@ namespace Sakura::refl
 			constexpr MetaPiece(const char* _t, const char* _v)
 				: title(_t), value(_v)
 			{}
-			const char* title = nullptr;
-			const char* value = nullptr;
+			const std::string_view title = nullptr;
+			const std::string_view value = nullptr;
 		};
 		constexpr Meta(const MetaPiece* _ms, uint32_t _mc)
 			:metas(_ms), metaCount(_mc)
@@ -220,18 +299,56 @@ namespace Sakura::refl
 
 		}
 		const MetaPiece* metas = nullptr;//8 36
-		uint32_t metaCount = 0;//4 40
+		const uint32_t metaCount = 0;//4 40
 	};
-
+	
 	struct Field
 	{
-		const char* name;//8
-		std::string_view type;
-		uint32_t offset;// 4 24
-		Meta metas;
-	};
-	using Parameter = Field;
+		constexpr Field(const std::string_view _n, std::string_view _t,
+			uint32_t _o)
+			:name(_n), type(_t), offset(_o)
+		{
+			
+		}
 
+		const std::string_view name;//8
+		const std::string_view type;
+		uint32_t offset;// 4 24
+	};
+
+
+	template<int N>
+	struct FieldWithMeta final : public Field
+	{
+		constexpr FieldWithMeta(const std::string_view _n, std::string_view _t,
+			uint32_t _o, const Meta::MetaPiece(&_ms)[N])
+			: Field(_n, _t, _o), metas(_ms)
+		{
+			
+		}
+		constexpr int MetaCount() const
+		{
+			return N;
+		}
+		const Meta::MetaPiece(&metas)[N];
+	};
+
+	template<>
+	struct FieldWithMeta<0> final : public Field
+	{
+		constexpr FieldWithMeta(const std::string_view _n, std::string_view _t,
+			uint32_t _o, std::nullptr_t nptr)
+			: Field(_n, _t, _o), metas(nptr)
+		{
+			
+		}
+		constexpr int MetaCount() const
+		{
+			return 0;
+		}
+		const Meta::MetaPiece* metas = nullptr;
+	};
+	
 	// Reference is a non-const, type erased wrapper around any object.
 	class Reference final
 	{
@@ -319,11 +436,12 @@ namespace Sakura::refl
 	GEN_REFL_BASIC_TYPES(float);
 	GEN_REFL_BASIC_TYPES(double);
 	GEN_REFL_BASIC_TYPES_TWO_PARAM(string, string);
+	GEN_REFL_BASIC_TYPES_TWO_PARAM(std::string_view, string_view);
 	GEN_REFL_BASIC_TYPES_TWO_PARAM(pmr::string, string);
 	GEN_REFL_BASIC_TYPES_TWO_PARAM(std::byte, byte);
 	GEN_REFL_BASIC_TYPES_TWO_PARAM(const char*, const char*);
 
-
+/*
 	template<> struct ClassInfo<Field>
 	{
 		inline static const constexpr char* GetClassName() { return "Field"; }
@@ -354,7 +472,7 @@ namespace Sakura::refl
 		assert(0 && "No field of this name.");
 		return o;
 	}
-
+*/
 	template<typename T>
 	struct SEnum
 	{
@@ -376,19 +494,10 @@ namespace Sakura::refl
 					fn(field_schema.val, field_schema.fd);
 				});
 		}
-		
-		inline static const char* ToString(T t)
-		{
-			const char* result = "NULL";
-			ForEachStaticField([&](T val, const Field& meta)
-			{
-				if(t == val)
-					result = meta.name;
-			});
-			return result;
-
-		}
 	};
+
+	has_member(all_fields);
+	has_member(all_static_fields);
 
 	template<typename T>
 	struct SClass
@@ -409,7 +518,7 @@ namespace Sakura::refl
 		{
 			return Reference();
 		}
-		inline static const Field GetFieldMeta(const std::string& name) noexcept
+		inline static const auto GetFieldMeta(const std::string& name) noexcept
 		{
 			for (auto i = 0; i < GetFieldCount(); i++)
 			{
@@ -432,12 +541,9 @@ namespace Sakura::refl
 			detail::ForEachTuple(std::forward<Tuple>(tup),
 				[&fn](auto&& field_schema)
 				{
-						fn(field_schema.fd);
+					fn(field_schema);
 				});
 		}
-
-		has_member(all_fields);
-		has_member(all_static_fields);
 
 		template <bool atomic, typename V, typename Fn, typename Tuple>
 		inline static constexpr void __for_each_field_impl(Tuple&& tup, V&& value, Fn&& fn)
@@ -458,9 +564,7 @@ namespace Sakura::refl
 						}
 					}
 					else
-					{
-						fn(value.*(field_schema.ptr), field_schema.fd);
-					}
+						fn(value.*(field_schema.ptr), field_schema);
 				});
 		}
 
@@ -474,9 +578,7 @@ namespace Sakura::refl
 					if constexpr (!isAtomic<ClassName_CS>() && atomic)
 						SClass<ClassName_CS>::ForEachFieldAtomic(*(field_schema.ptr), fn);
 					else
-					{
-						fn(*field_schema.ptr, field_schema.fd);
-					}
+						fn(*field_schema.ptr, field_schema);
 				});
 		}
 
@@ -562,7 +664,6 @@ namespace Sakura::refl
 	{
 		return SClass<T>::GetTypeId();
 	}
-
 
 
 
@@ -686,71 +787,6 @@ namespace Sakura::refl
 	{
 		return (SClass<T>::GetTypeId() == id_);
 	}
-
-	struct IFunction : public IType
-	{
-		virtual int GetParameterCount() const = 0;
-		virtual Parameter GetReturnType() const = 0;
-		virtual Parameter GetParameter(int i) const = 0;
-
-		// Syntactic sugar for calling Invoke().
-		template <typename... Ts>
-		Object operator()(Ts&&... ts);
-
-		virtual Object Invoke(const std::vector<Object>& args) = 0;
-	};
-
-	class IMethod : public IType
-	{
-	public:
-		virtual int GetParameterCount() const = 0;
-		virtual Parameter GetReturnType() const = 0;
-		virtual Parameter GetParameter(int i) const = 0;
-
-		// Syntactic sugar for calling Invoke().
-		template <typename... Ts>
-		Object operator()(const Reference& o, Ts&&... ts);
-
-		virtual Object Invoke(
-			const Reference& o, const std::vector<Object>& args) = 0;
-	};
-
-	class IClass : public IType
-	{
-	public:
-		virtual int GetFieldCount() const = 0;
-		virtual Reference GetField(
-			const Reference& o, const std::string& name) const = 0;
-
-		virtual int GetStaticFieldCount() const = 0;
-		virtual Reference GetStaticField(const std::string& name) const = 0;
-
-		virtual int GetMethodCount() const = 0;
-		virtual std::vector<std::unique_ptr<IMethod>> GetMethod(
-			const std::string& name) const = 0;
-
-		virtual int GetStaticMethodCount() const = 0;
-		virtual std::vector<std::unique_ptr<IFunction>> GetStaticMethod(
-			const std::string& name) const = 0;
-	};
-
-	class IEnum : public IType
-	{
-	public:
-		virtual std::vector<std::string> GetStringValues() const = 0;
-		virtual std::vector<int> GetIntValues() const = 0;
-		virtual bool TryTranslate(const std::string& value, int& out) = 0;
-		virtual bool TryTranslate(int value, std::string& out) = 0;
-	};
-
-	template<typename T>
-	struct DynSClass : IClass
-	{
-		virtual const char* GetName() const override final { return GetClassName<T>(); }
-	};
-
-	template <typename T, T t> struct Function : IFunction {};
-	template <typename T, T t> struct Method : IMethod {};
 }
 
 namespace Sakura

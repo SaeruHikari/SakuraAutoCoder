@@ -156,13 +156,10 @@ namespace Sakura::refl
 			auto fields = GetFieldMap(unit, fieldSet);
 			if (fields.size() <= 0)
 				return;
-			output << punctuation("\t");
-			inline_static_const_constexpr(output);
-			output << cppast::keyword("auto") << cppast::punctuation(" ")
-				<< cppast::identifier(GetMetaGetterName(fieldSet)) << cppast::punctuation("()\n\t{\n");
+
 			for (auto iter = fields.begin(); iter != fields.end(); iter++)
 			{
-				output << punctuation("\t\t") 
+				output << punctuation("\t") 
 					<< cppast::identifier(GetMetaMacroGenName(fieldSet)) << cppast::punctuation("(")
 					<< identifier(iter->first) << punctuation(", ")
 					//<< identifier(iter->second.type) << punctuation(", ")
@@ -172,7 +169,11 @@ namespace Sakura::refl
 				else
 					output << cppast::identifier("nullptr");
 				output << punctuation(");\n");
-			}
+			}			
+			output << punctuation("\t");
+			inline_static_const_constexpr(output);
+			output << cppast::keyword("auto") << cppast::punctuation(" ")
+				<< cppast::identifier(GetMetaGetterName(fieldSet)) << cppast::punctuation("()\n\t{\n");
 			output << punctuation("\t\t") << keyword("return") << punctuation(" ")
 				<< identifier("hana::make_tuple") << punctuation("(");
 			auto i = 0u;

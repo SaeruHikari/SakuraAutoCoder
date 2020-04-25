@@ -1,7 +1,7 @@
 ﻿/*
  * @Author: your name
  * @Date: 2020-04-22 00:49:46
- * @LastEditTime: 2020-04-25 12:20:41
+ * @LastEditTime: 2020-04-26 02:27:06
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /SakuraAutoCoder/CodeGen/UnitTest/Test.cpp
@@ -24,51 +24,76 @@ decltype(auto) call(F f, T (&t)[N])
 }
 int arr[4] = {1, 2, 3, 4};
 has_member(attrib);
+
+template<typename T>
+void auto_func_template(T&& field, const Field& meta,
+	const std::string_view prefix)
+{
+	using TT = std::decay_t<decltype(field)>;
+	if constexpr (Sakura::refl::isAtomic<TT>())
+		std::cout << prefix << ": "
+			 << meta.type << " - " << meta.name << std::endl;
+	else if constexpr (
+		Sakura::refl::has_member_all_fields<ClassInfo<TT>>::value)
+	{
+		std::cout << "FOREACH OF CHILD FIELD:\n";
+		SClass<TT>::ForEachField(field, 
+			[&](auto&& _field, auto&& _meta){
+				auto_func_template(_field, _meta.fd, meta.name);
+			});
+		std::cout << "END FOREACH OF CHILD FIELD\n";
+	}
+}
+
 int main(void)
 {
 	constexpr bool value = has_member_attrib<Test::TestComponent>::value;
-	std::cout << call([](int, int, int, int){return 5;}, arr);
+	//std::cout << call([](int, int, int, int){return 5;}, arr);
 	Test::TestComponent testComp;
 	Test::TestComponentWrap testCompWrap;
 	SClass<std::decay<decltype(testComp)>::type>::ForEachField(testComp,
-		Sakura::overload(
-			[](auto&& field, const Field& meta) {
-				std::cout
-					<< meta.type << " - ";
-					//<< meta.name << ": " << field << std::endl;
-			}));
+		[](auto&& field, auto&& meta) {
+			std::cout << meta.fd.type << " - " << meta.fd.name << std::endl;
+		});
 
 	std::cout << std::endl << std::endl;
-	SClass<std::decay<decltype(testCompWrap)>::type>::ForEachFieldAtomic(testCompWrap,
-		Sakura::overload(
-			[](float field, const Field& meta) {
-				std::cout << meta.name << ": " << field << std::endl;
-			},
-			[](const std::string& field, const Field& meta) {
-				std::cout << meta.name << ": " << field << std::endl;
-			},
-			[](Test::TestComponent* field, const Field& meta) {
-				std::cout << "TestCompPtr" << std::endl;
-			},
-			[](const intvec& v, const Field& meta){
-				
-			}));
+	
+	// lambda: not so conveniet to call	recursively...use tempalte
+	/*
+	decltype(auto) accessor = 
+		[&](auto&& self, auto&& field, const Field& meta) {
+			using fieldT = std::decay_t<decltype(field)>;
+			auto functor  =
+				[&](auto&& field, const Field& meta){
+					self(self, field, meta);
+				};
+			if constexpr (Sakura::refl::isAtomic<fieldT>())
+				std::cout << meta.type << " - " << meta.name << std::endl;
+			else if constexpr (Sakura::refl::has_member_all_fields<ClassInfo<fieldT>>::value)
+			{
+				std::cout << "FOREACH OF CHILD FIELD:\n";
+				SClass<fieldT>::ForEachField(field, functor);
+				std::cout << "END FOREACH OF CHILD FIELD\n";
+			}
+		};
+	auto functor =
+		[&](auto&& field, const Field& meta){
+			accessor(accessor, field, meta);
+		};*/
+
+	SClass<std::decay<decltype(testCompWrap)>::type>::ForEachField(
+		testCompWrap, [](auto&& field, auto&& meta){
+			auto_func_template(field, meta.fd, "");
+		});
 
 	std::cout << std::endl << std::endl;
-	SClass<Test::TestComponentWrap>::ForEachStaticFieldAtomic(
-		Sakura::overload(
-			[](float field, const Field& meta) {
-				std::cout << meta.name << ": " << field << std::endl;
-			},
-			[](const std::string& field, const Field& meta) {
-				std::cout << meta.name << ": " << field << std::endl;
-			},
-			[](const intvec& v, const Field& meta){
+	SClass<Test::TestComponentWrap>::ForEachStaticField(
+			[](auto&& field, auto&& meta){
 				
-			}));
+			});
 	
 	SClass<std::decay<decltype(testComp)>::type>::ForEachMethod(testComp,
-		[&](auto&& method, const Field& meta)
+		[&](auto&& method, auto&& meta)
 		{
 			if constexpr
 				(std::is_same<typename std::decay<decltype(method)>::type,
@@ -80,10 +105,10 @@ int main(void)
 		});
 
 	SEnum<Test::TestEnum>::ForEachStaticField(
-		[&](Test::TestEnum val, const Field& meta)
+		[&](Test::TestEnum val, auto&& meta)
 		{
 			std::cout << (std::size_t)val << " " << meta.name << std::endl;
 		});
-	std::cout << SEnum<Test::TestEnum>::ToString(Test::TestEnum::E_ONE);
+	//std::cout << SEnum<Test::TestEnum>::ToString(Test::TestEnum::E_ONE);
 	return 0;
 }
