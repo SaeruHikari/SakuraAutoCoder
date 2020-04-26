@@ -1,7 +1,7 @@
 ﻿/*
  * @Author: your name
  * @Date: 2020-04-04 12:32:09
- * @LastEditTime: 2020-04-26 02:23:59
+ * @LastEditTime: 2020-04-26 22:02:27
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \undefinedd:\Coding\SakuraAutoCoder\CodeGen\refl.rule.hxx
@@ -73,7 +73,7 @@ namespace Sakura::refl
 		constexpr bool matching_impl(const std::string_view tag, F&& func,
 			T(&t)[N], std::index_sequence<Idx...>)
 		{
-			return (func(tag, t[Idx].title)|...);
+			return (func(tag, t[Idx].title) | ...);
 		}
 		template <typename F, typename T, std::size_t N>
 		constexpr decltype(auto) matching(const std::string_view tag, 
@@ -497,7 +497,9 @@ namespace Sakura::refl
 	};
 
 	has_member(all_fields);
+	has_member(all_methods);
 	has_member(all_static_fields);
+	has_member(all_static_methods);
 
 	template<typename T>
 	struct SClass
@@ -585,63 +587,83 @@ namespace Sakura::refl
 		template <typename Fn>
 		inline static constexpr void ForEachFieldMeta(Fn&& fn)
 		{
-			__for_each_field_meta_impl<false>(info::all_fields(), fn);
+			if constexpr (has_member_all_methods<ClassInfo<ClassName>>::value)
+				__for_each_field_meta_impl<false>(info::all_fields(), fn);
+			return;
 		}
 		template <typename V, typename Fn>
 		inline static constexpr void ForEachField(V&& value, Fn&& fn)
 		{
-			__for_each_field_impl<false>(info::all_fields(), value, fn);
+			if constexpr (has_member_all_methods<ClassInfo<ClassName>>::value)
+				__for_each_field_impl<false>(info::all_fields(), value, fn);
+			return;
 		}
 		template <typename V, typename Fn>
 		inline static constexpr void ForEachFieldAtomic(V&& value, Fn&& fn)
 		{
-			__for_each_field_impl<true>(info::all_fields(), value, fn);
+			if constexpr (has_member_all_methods<ClassInfo<ClassName>>::value)
+				__for_each_field_impl<true>(info::all_fields(), value, fn);
+			return;
 		}
 
 		template <typename Fn>
 		inline static constexpr void ForEachStaticFieldMeta(Fn&& fn)
 		{
-			__for_each_field_meta_impl<false>(info::all_static_fields(), fn);
+			if constexpr (has_member_all_static_fields<ClassInfo<ClassName>>::value)
+				__for_each_field_meta_impl<false>(info::all_static_fields(), fn);
+			return;
 		}
 		template <typename Fn>
 		inline static constexpr void ForEachStaticField(Fn&& fn)
 		{
-			__for_each_static_field_impl<false>(info::all_static_fields(), fn);
+			if constexpr (has_member_all_static_fields<ClassInfo<ClassName>>::value)
+				__for_each_static_field_impl<false>(info::all_static_fields(), fn);
+			return;
 		}
 		template <typename Fn>
 		inline static constexpr void ForEachStaticFieldAtomic(Fn&& fn)
 		{
-			__for_each_static_field_impl<true>(info::all_static_fields(), fn);
+			if constexpr (has_member_all_static_fields<ClassInfo<ClassName>>::value)
+				__for_each_static_field_impl<true>(info::all_static_fields(), fn);
+			return;
 		}
 
 		template <typename Fn>
 		inline static constexpr void ForEachMethodMeta(Fn&& fn)
 		{
-			__for_each_field_meta_impl<false>(info::all_methods(), fn);
+			if constexpr (has_member_all_methods<ClassInfo<ClassName>>::value)
+				__for_each_field_meta_impl<false>(info::all_methods(), fn);
+			return;
 		}
 		template <typename V, typename Fn>
 		inline static constexpr void ForEachMethod(V&& value, Fn&& fn)
 		{
-			detail::ForEachTuple(info::all_methods(),
-				[&value, &fn](auto&& field_schema)
-				{
-					fn(field_schema.ptr, field_schema.fd);
-				});
+			if constexpr (has_member_all_methods<ClassInfo<ClassName>>::value)
+				detail::ForEachTuple(info::all_methods(),
+					[&value, &fn](auto&& field_schema)
+					{
+						fn(field_schema.ptr, field_schema.fd);
+					});
+			return;
 		}
 
 		template <typename Fn>
 		inline static constexpr void ForEachStaticMethodMeta(Fn&& fn)
 		{
-			__for_each_field_meta_impl<false>(info::all_static_methods(), fn);
+			if constexpr (has_member_all_static_methods<ClassInfo<ClassName>>::value)
+				__for_each_field_meta_impl<false>(info::all_static_methods(), fn);
+			return;
 		}
 		template <typename Fn>
 		inline static constexpr void ForEachStaticMethod(Fn&& fn)
 		{
-			detail::ForEachTuple(info::all_static_methods(),
-				[&fn](auto&& field_schema)
-				{
-					fn(field_schema.ptr, field_schema.fd);
-				});
+			if constexpr (has_member_all_static_methods<ClassInfo<ClassName>>::value)
+				detail::ForEachTuple(info::all_static_methods(),
+					[&fn](auto&& field_schema)
+					{
+						fn(field_schema.ptr, field_schema.fd);
+					});
+			return;
 		}
 
 

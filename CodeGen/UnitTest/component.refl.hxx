@@ -1,7 +1,7 @@
 /*
  * @Author: your name 
  * @Date: 2020-04-04 11:12:12
- * @LastEditTime: 2020-04-25 14:20:59
+ * @LastEditTime: 2020-04-26 21:50:42
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit 
  * @FilePath: \undefinedd :\Coding\SakuraAutoCoder\CodeGen\component.refl.hxx
@@ -20,28 +20,28 @@ namespace Test
 {
 	struct [[refl]] [[descriptions("This is a test component")]] TestComponent
 	{   
-		[[meta("SaeruHikari")]]
+		[[refl]][[meta("SaeruHikari")]]
 		float attrib = 123.f;
 		
-		[[container("This is a container!")]]
+		[[refl]][[container("This is a container!")]]
 		std::vector<float> testContainer = {1.f, 2.f, 3.f, 4.f};
 
 		[[meta("Fxxk ISO C++23")]]
 		std::string name = "TestComp";
 	
-		[[meta("This is a static attribute")]]
+		[[refl]][[meta("This is a static attribute")]]
 		inline static const constexpr float staticAttrib = 155;  
-	 
-		[[meta("Can't wait to use compile-time-reflection")]]
+
+		[[refl]][[meta("Can't wait to use compile-time-reflection")]]
 		void Method(TestComponent* inRef)
 		{
 			std::cout << std::endl << "static method call!" << std::endl;
-		}; 
-	}; 
+		};  
+	};
 	
 	struct [[refl]] TestComponentWrap
 	{     
-		TestComponent comp [[description("Test wrapping of reflection component")]];
+		TestComponent comp [[refl]][[description("Test wrapping of reflection component")]];
 		inline static const TestComponent statComp;
 		float wtf = 155.f;  
 	}; 

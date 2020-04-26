@@ -156,20 +156,28 @@ namespace Sakura::refl
 			auto fields = GetFieldMap(unit, fieldSet);
 			if (fields.size() <= 0)
 				return;
-
+			int num = 0;
 			for (auto iter = fields.begin(); iter != fields.end(); iter++)
 			{
-				output << punctuation("\t") 
-					<< cppast::identifier(GetMetaMacroGenName(fieldSet)) << cppast::punctuation("(")
-					<< identifier(iter->first) << punctuation(", ")
-					//<< identifier(iter->second.type) << punctuation(", ")
-					<< identifier(unit.unitName) << punctuation(", ");
-				if (iter->second.fieldMetas.size() > 0)
-					output << cppast::identifier(iter->first + "_meta");
-				else
-					output << cppast::identifier("nullptr");
-				output << punctuation(");\n");
+				if(iter->second.fieldMetas.find("refl")
+					!= iter->second.fieldMetas.end() |
+					fieldSet == FieldSet::E_ENUM_VALUES)
+				{
+					output << punctuation("\t") 
+						<< cppast::identifier(GetMetaMacroGenName(fieldSet)) << cppast::punctuation("(")
+						<< identifier(iter->first) << punctuation(", ")
+						//<< identifier(iter->second.type) << punctuation(", ")
+						<< identifier(unit.unitName) << punctuation(", ");
+					if (iter->second.fieldMetas.size() > 0)
+						output << cppast::identifier(iter->first + "_meta");
+					else
+						output << cppast::identifier("nullptr");
+					output << punctuation(");\n");
+					num++;
+				}
 			}			
+			if(num <= 0)
+				return;
 			output << punctuation("\t");
 			inline_static_const_constexpr(output);
 			output << cppast::keyword("auto") << cppast::punctuation(" ")
@@ -179,12 +187,17 @@ namespace Sakura::refl
 			auto i = 0u;
 			for (auto iter = fields.begin(); iter != fields.end(); iter++)
 			{
-				i++;
-				output << identifier(iter->first + "_info()");
-				if(i != fields.size())
-					output << punctuation(", ");
-				else
-					output << punctuation(");\n\t}\n");
+				if(iter->second.fieldMetas.find("refl")
+					!= iter->second.fieldMetas.end()|
+					fieldSet == FieldSet::E_ENUM_VALUES)
+				{
+					i++;
+					output << identifier(iter->first + "_info()");
+					if(i != num)
+						output << punctuation(", ");
+					else
+						output << punctuation(");\n\t}\n");
+				}
 			}
 		}
 	}

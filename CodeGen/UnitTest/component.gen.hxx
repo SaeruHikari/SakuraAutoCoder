@@ -1,4 +1,4 @@
-//generated time:1587838964
+//generated time:1587909050
 //generated end
 
 
@@ -20,37 +20,35 @@ struct ClassInfo<Test::TestComponent>
 		{"refl", "null"}
 	};
 
-	inline static const constexpr Meta::MetaPiece attrib_meta[1] = 
+	inline static const constexpr Meta::MetaPiece attrib_meta[2] = 
 	{
-		{"meta", "SaeruHikari"}
+		{"meta", "SaeruHikari"},
+		{"refl", "null"}
 	};
 
-	inline static const constexpr Meta::MetaPiece testContainer_meta[1] = 
+	inline static const constexpr Meta::MetaPiece testContainer_meta[2] = 
 	{
-		{"container", "This is a container!"}
+		{"container", "This is a container!"},
+		{"refl", "null"}
 	};
 
-	inline static const constexpr Meta::MetaPiece name_meta[1] = 
+	inline static const constexpr Meta::MetaPiece staticAttrib_meta[2] = 
 	{
-		{"meta", "Fxxk ISO C++23"}
+		{"meta", "This is a static attribute"},
+		{"refl", "null"}
 	};
 
-	inline static const constexpr Meta::MetaPiece staticAttrib_meta[1] = 
+	inline static const constexpr Meta::MetaPiece Method_meta[2] = 
 	{
-		{"meta", "This is a static attribute"}
-	};
-
-	inline static const constexpr Meta::MetaPiece Method_meta[1] = 
-	{
-		{"meta", "Can't wait to use compile-time-reflection"}
+		{"meta", "Can't wait to use compile-time-reflection"},
+		{"refl", "null"}
 	};
 
 	SFIELD_INFO(attrib, Test::TestComponent, attrib_meta);
-	SFIELD_INFO(name, Test::TestComponent, name_meta);
 	SFIELD_INFO(testContainer, Test::TestComponent, testContainer_meta);
 	inline static const constexpr auto all_fields()
 	{
-		return hana::make_tuple(attrib_info(), name_info(), testContainer_info());
+		return hana::make_tuple(attrib_info(), testContainer_info());
 	}
 	SSTATICFIELD_INFO(staticAttrib, Test::TestComponent, staticAttrib_meta);
 	inline static const constexpr auto all_static_fields()
@@ -76,21 +74,16 @@ struct ClassInfo<Test::TestComponentWrap>
 		{"refl", "null"}
 	};
 
-	inline static const constexpr Meta::MetaPiece comp_meta[1] = 
+	inline static const constexpr Meta::MetaPiece comp_meta[2] = 
 	{
-		{"description", "Test wrapping of reflection component"}
+		{"description", "Test wrapping of reflection component"},
+		{"refl", "null"}
 	};
 
 	SFIELD_INFO(comp, Test::TestComponentWrap, comp_meta);
-	SFIELD_INFO(wtf, Test::TestComponentWrap, nullptr);
 	inline static const constexpr auto all_fields()
 	{
-		return hana::make_tuple(comp_info(), wtf_info());
-	}
-	SSTATICFIELD_INFO(statComp, Test::TestComponentWrap, nullptr);
-	inline static const constexpr auto all_static_fields()
-	{
-		return hana::make_tuple(statComp_info());
+		return hana::make_tuple(comp_info());
 	}
 };
 

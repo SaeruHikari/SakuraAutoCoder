@@ -142,30 +142,40 @@ namespace Sakura::refl
 			// Iterate
 			for (auto& member : c)
 			{
-				std::cout << member.name() << std::endl;
-				if (member.kind() == cpp_entity_kind::member_variable_t)
 				{
-					detail::collect_field_meta(reflUnit.fieldsMap[member.name()], member);
-					generate_meta_class_member_varable(output, ((const cpp_member_variable&)member),
-						reflUnit.fieldsMap[member.name()]);
-				}
-				else if (member.kind() == cpp_entity_kind::variable_t)
-				{
-					detail::collect_static_field_meta(reflUnit.staticFieldsMap[member.name()], member);
-					generate_meta_class_member_varable(output, ((const cpp_member_variable&)member),
-						reflUnit.staticFieldsMap[member.name()]);
-				}
-				else if (member.kind() == cpp_entity_kind::member_function_t)
-				{
-					detail::collect_method_meta(reflUnit.methodsMap[member.name()], member);
-					generate_meta_class_member_varable(output, ((const cpp_member_variable&)member),
-						reflUnit.methodsMap[member.name()]);
-				}
-				else if (member.kind() == cpp_entity_kind::function_t)
-				{
-					detail::collect_static_method_meta(reflUnit.methodsMap[member.name()], member);
-					generate_meta_class_member_varable(output, ((const cpp_member_variable&)member),
-						reflUnit.methodsMap[member.name()]);
+					std::cout << member.name() << std::endl;
+					if (member.kind() == cpp_entity_kind::member_variable_t)
+					{
+						detail::collect_field_meta(reflUnit.fieldsMap[member.name()], member);
+						if(reflUnit.fieldsMap[member.name()].fieldMetas.find("refl") 
+							!= reflUnit.fieldsMap[member.name()].fieldMetas.end())
+						generate_meta_class_member_varable(output, ((const cpp_member_variable&)member),
+							reflUnit.fieldsMap[member.name()]);
+					}
+					else if (member.kind() == cpp_entity_kind::variable_t)
+					{
+						detail::collect_static_field_meta(reflUnit.staticFieldsMap[member.name()], member);
+						if(reflUnit.staticFieldsMap[member.name()].fieldMetas.find("refl") 
+							!= reflUnit.staticFieldsMap[member.name()].fieldMetas.end())
+						generate_meta_class_member_varable(output, ((const cpp_member_variable&)member),
+							reflUnit.staticFieldsMap[member.name()]);
+					}
+					else if (member.kind() == cpp_entity_kind::member_function_t)
+					{
+						detail::collect_method_meta(reflUnit.methodsMap[member.name()], member);
+						if(reflUnit.methodsMap[member.name()].fieldMetas.find("refl") 
+							!= reflUnit.methodsMap[member.name()].fieldMetas.end())
+						generate_meta_class_member_varable(output, ((const cpp_member_variable&)member),
+							reflUnit.methodsMap[member.name()]);
+					}
+					else if (member.kind() == cpp_entity_kind::function_t)
+					{
+						detail::collect_static_method_meta(reflUnit.staticMethodsMap[member.name()], member);
+						if(reflUnit.staticMethodsMap[member.name()].fieldMetas.find("refl") 
+							!= reflUnit.staticMethodsMap[member.name()].fieldMetas.end())
+						generate_meta_class_member_varable(output, ((const cpp_member_variable&)member),
+							reflUnit.staticMethodsMap[member.name()]);
+					}
 				}
 			}
 			detail::gen_all_fields(output, reflUnit, detail::FieldSet::E_FIELDS);
