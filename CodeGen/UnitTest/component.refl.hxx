@@ -1,7 +1,7 @@
 /*
  * @Author: your name 
  * @Date: 2020-04-04 11:12:12
- * @LastEditTime: 2020-04-28 01:35:34
+ * @LastEditTime: 2020-04-28 02:04:00
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit 
  * @FilePath: \undefinedd :\Coding\SakuraAutoCoder\CodeGen\component.refl.hxx
@@ -11,6 +11,7 @@
 #include <string>   
 #include <vector>
 
+
 namespace Sakura::refl
 {
 	template<> inline const constexpr bool isAtomic<std::vector<float>>(){return true;}
@@ -18,6 +19,7 @@ namespace Sakura::refl
 
 namespace Test
 {
+	struct [[atomic]] wtf {};
 	struct [[refl]]
 	[[descriptions("This is a test component")]] 
 	[[prettyname("Test Component")]]
@@ -65,5 +67,6 @@ namespace Test
 		[[wtf]] std::string invalid = "SDS";
 	};
 }
+
 #include "component.gen.hxx"    
  

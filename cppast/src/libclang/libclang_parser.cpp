@@ -574,22 +574,18 @@ std::unique_ptr<cpp_file> libclang_parser::do_parse(const cpp_entity_index& idx,
     auto& config = static_cast<const libclang_compile_config&>(c);
 
     // preprocess
-    auto startTime = std::chrono::high_resolution_clock::now();
     auto preprocessed = detail::preprocess(config, path.c_str(), logger());
     
-    /*if (detail::libclang_compile_config_access::write_preprocessed(config))
+    if (detail::libclang_compile_config_access::write_preprocessed(config))
     {
         std::ofstream file(path + ".pp");
         file << preprocessed.source;
-    }*/
+    }
     // parse
     auto tu   = get_cxunit(logger(), pimpl_->index, config, path.c_str(), preprocessed.source);
     
     auto file = clang_getFile(tu.get(), path.c_str());
-auto currentTime = std::chrono::high_resolution_clock::now();
-	float time = std::chrono::duration
-		<float, std::chrono::seconds::period>(currentTime - startTime).count();
-	std::cout << time << std::endl;
+
     cpp_file::builder builder(detail::cxstring(clang_getFileName(file)).std_str());
     auto              macro_iter   = preprocessed.macros.begin();
     auto              include_iter = preprocessed.includes.begin();

@@ -1,4 +1,4 @@
-//generated time:1588009125
+//generated time:1588010868
 //generated end
 
 
@@ -7,6 +7,7 @@
 
 using namespace Sakura::refl;
 
+template<> inline const constexpr bool Sakura::refl::isAtomic<Test::wtf>(){return true;}
 template<>
 struct ClassInfo<Test::TestComponent>
 {
