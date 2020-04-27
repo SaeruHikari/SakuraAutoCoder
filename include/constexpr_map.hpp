@@ -2,58 +2,70 @@
 #include <utility>
 #include <functional>
 
-namespace Sakura {
-namespace detail {
+namespace Sakura 
+{
+namespace detail 
+{
 
 template <typename T>
-constexpr void swap(T& a, T& b) noexcept {
+constexpr void swap(T& a, T& b) noexcept
+{
     T tmp{ a };
     a = b;
     b = tmp;
 }
 
 template <typename Key>
-class compare_key {
+class compare_key 
+{
 public:
     const Key key;
 
-    constexpr compare_key(const Key& key_) noexcept : key(key_) {
+    constexpr compare_key(const Key& key_) noexcept : key(key_) 
+    {
     }
 
     template <typename Element>
-    constexpr bool operator<(const Element& rhs) const noexcept {
+    constexpr bool operator<(const Element& rhs) const noexcept 
+    {
         return key < rhs->first;
     }
 };
 
 template <typename Key, typename Value>
-class element {
+class element 
+{
 public:
     using key_type = Key;
     using mapped_type = Value;
     using value_type = std::pair<key_type, mapped_type>;
     using compare_key_type = compare_key<key_type>;
 
-    constexpr element(const key_type& key, const mapped_type& value) noexcept : pair(key, value) {
-    }
+    constexpr element(const key_type& key, const mapped_type& value) noexcept 
+        : pair(key, value) {}
 
-    constexpr bool operator<(const element& rhs) const noexcept {
+    constexpr bool operator<(const element& rhs) const noexcept 
+    {
         return pair.first < rhs.pair.first;
     }
 
-    constexpr bool operator<(const compare_key_type& rhs) const noexcept {
+    constexpr bool operator<(const compare_key_type& rhs) const noexcept 
+    {
         return pair.first < rhs.key;
     }
 
-    constexpr const auto& operator*() const noexcept {
+    constexpr const auto& operator*() const noexcept 
+    {
         return pair;
     }
 
-    constexpr const auto* operator->() const noexcept {
+    constexpr const auto* operator->() const noexcept 
+    {
         return &pair;
     }
 
-    constexpr void swap(element& rhs) noexcept {
+    constexpr void swap(element& rhs) noexcept 
+    {
         detail::swap(pair.first, rhs.pair.first);
         detail::swap(pair.second, rhs.pair.second);
     }
@@ -63,23 +75,26 @@ private:
 };
 
 template <typename Key, typename Hasher = std::hash<Key>>
-class compare_key_hash : public compare_key<Key> {
+class compare_key_hash : public compare_key<Key> 
+{
     using base_type = compare_key<Key>;
 
 public:
     const std::size_t hash;
 
-    constexpr compare_key_hash(const Key& key_) noexcept : base_type(key_), hash(Hasher()(key_)) {
-    }
+    constexpr compare_key_hash(const Key& key_) noexcept 
+        : base_type(key_), hash(Hasher()(key_)) {}
 
     template <typename Element>
-    constexpr bool operator<(const Element& rhs) const noexcept {
+    constexpr bool operator<(const Element& rhs) const noexcept 
+    {
         return hash < rhs.hash || (!(rhs.hash < hash) && base_type::operator<(rhs));
     }
 };
 
 template <typename Key, typename Value, typename Hasher = std::hash<Key>>
-class element_hash : public element<Key, Value> {
+class element_hash : public element<Key, Value> 
+{
     using base_type = element<Key, Value>;
 
 public:
@@ -90,15 +105,16 @@ public:
     friend compare_key_type;
 
     constexpr element_hash(const key_type& key, const mapped_type& value) noexcept
-        : base_type(key, value), hash(Hasher()(key)) {
-    }
+        : base_type(key, value), hash(Hasher()(key)) {}
 
     template <typename T>
-    constexpr bool operator<(const T& rhs) const noexcept {
+    constexpr bool operator<(const T& rhs) const noexcept 
+    {
         return hash < rhs.hash || (!(rhs.hash < hash) && base_type::operator<(rhs));
     }
 
-    constexpr void swap(element_hash& rhs) noexcept {
+    constexpr void swap(element_hash& rhs) noexcept 
+    {
         detail::swap(hash, rhs.hash);
         base_type::swap(rhs);
     }
@@ -112,50 +128,61 @@ private:
 template <typename Element>
 class iterator {
 public:
-    constexpr iterator(const Element* pos_) noexcept : pos(pos_) {
+    constexpr iterator(const Element* pos_) noexcept : pos(pos_) 
+    {
     }
 
-    constexpr bool operator==(const iterator& rhs) const noexcept {
+    constexpr bool operator==(const iterator& rhs) const noexcept 
+    {
         return pos == rhs.pos;
     }
 
-    constexpr bool operator!=(const iterator& rhs) const noexcept {
+    constexpr bool operator!=(const iterator& rhs) const noexcept
+    {
         return pos != rhs.pos;
     }
 
-    constexpr iterator& operator++() noexcept {
+    constexpr iterator& operator++() noexcept 
+    {
         ++pos;
         return *this;
     }
 
-    constexpr iterator& operator+=(std::size_t i) noexcept {
+    constexpr iterator& operator+=(std::size_t i) noexcept 
+    {
         pos += i;
         return *this;
     }
 
-    constexpr iterator operator+(std::size_t i) const noexcept {
+    constexpr iterator operator+(std::size_t i) const noexcept 
+    {
         return pos + i;
     }
 
-    constexpr iterator& operator--() noexcept {
+    constexpr iterator& operator--() noexcept 
+    {
         --pos;
         return *this;
     }
 
-    constexpr iterator& operator-=(std::size_t i) noexcept {
+    constexpr iterator& operator-=(std::size_t i) noexcept 
+    {
         pos -= i;
         return *this;
     }
 
-    constexpr std::size_t operator-(const iterator& rhs) const noexcept {
+    constexpr std::size_t operator-(const iterator& rhs) const noexcept
+    {
         return pos - rhs.pos;
     }
 
-    constexpr const auto& operator*() const noexcept {
+    constexpr const auto& operator*() const noexcept 
+    {
         return **pos;
     }
 
-    constexpr const auto* operator->() const noexcept {
+    constexpr const auto* operator->() const noexcept 
+    {
         return &**pos;
     }
 
@@ -166,49 +193,58 @@ private:
 namespace detail {
 
 template <typename Compare, typename Iterator, typename Key>
-constexpr auto bound(Iterator left, Iterator right, const Key& key) noexcept {
+constexpr auto bound(Iterator left, Iterator right, const Key& key) noexcept 
+{
     std::size_t count = right - left;
-    while (count > 0) {
+    while (count > 0) 
+    {
         const std::size_t step = count / 2;
         right = left + step;
-        if (Compare()(*right, key)) {
+        if (Compare()(*right, key)) 
+        {
             left = ++right;
             count -= step + 1;
-        } else {
+        } 
+        else
             count = step;
-        }
     }
     return left;
 }
 
 struct less {
     template <typename A, typename B>
-    constexpr bool operator()(const A& a, const B& b) const noexcept {
+    constexpr bool operator()(const A& a, const B& b) const noexcept 
+    {
         return a < b;
     }
 };
 
 struct greater_equal {
     template <typename A, typename B>
-    constexpr bool operator()(const A& a, const B& b) const noexcept {
+    constexpr bool operator()(const A& a, const B& b) const noexcept 
+    {
         return !(b < a);
     }
 };
 
 template <typename Element, std::size_t N>
-class map_c {
+class map_c 
+{
 private:
-    static_assert(N > 0, "map is empty");
+    //static_assert(N > 0, "map is empty");
 
     template <typename T, std::size_t... I>
     constexpr map_c(const T (&data)[N], std::index_sequence<I...>) noexcept
-        : data_{ { data[I].first, data[I].second }... } {
+        : data_{ { data[I].first, data[I].second }... } 
+    {
         static_assert(sizeof...(I) == N, "index_sequence has identical length");
-        // Yes, this is a bubblesort. It's usually evaluated at compile-time, it's fast for data
         // that is already sorted (like static maps), it has a small code size, and it's stable.
-        for (auto left = data_, right = data_ + N - 1; data_ < right; right = left, left = data_) {
-            for (auto it = data_; it < right; ++it) {
-                if (it[1] < it[0]) {
+        for (auto left = data_, right = data_ + N - 1; data_ < right; right = left, left = data_) 
+        {
+            for (auto it = data_; it < right; ++it) 
+            {
+                if (it[1] < it[0]) 
+                {
                     it[0].swap(it[1]);
                     left = it;
                 }
@@ -217,12 +253,11 @@ private:
     }
 
     using compare_key_type = typename Element::compare_key_type;
-
 public:
     Element data_[N];
     template <typename T>
-    constexpr map_c(const T (&data)[N]) noexcept : map_c(data, std::make_index_sequence<N>()) {
-    }
+    constexpr map_c(const T (&data)[N]) noexcept 
+        : map_c(data, std::make_index_sequence<N>()) {}
 
     using key_type = typename Element::key_type;
     using mapped_type = typename Element::mapped_type;
@@ -233,7 +268,8 @@ public:
     using const_pointer = const value_type*;
     using const_iterator = iterator<Element>;
 
-    constexpr bool unique() const noexcept {
+    constexpr bool unique() const noexcept 
+    {
         for (auto right = data_ + N - 1, it = data_; it < right; ++it) {
             if (!(it[0] < it[1])) {
                 return false;
@@ -242,50 +278,61 @@ public:
         return true;
     }
 
-    constexpr const mapped_type& at(const key_type& key) const noexcept {
+    constexpr const mapped_type& at(const key_type& key) const noexcept 
+    {
         return find(key)->second;
     }
 
-    constexpr std::size_t size() const noexcept {
+    static constexpr int size() noexcept 
+    {
         return N;
     }
 
-    constexpr const_iterator begin() const noexcept {
+    constexpr const_iterator begin() const noexcept 
+    {
         return data_;
     }
 
-    constexpr const_iterator cbegin() const noexcept {
+    constexpr const_iterator cbegin() const noexcept
+    {
         return begin();
     }
 
-    constexpr const_iterator end() const noexcept {
+    constexpr const_iterator end() const noexcept 
+    {
         return data_ + N;
     }
 
-    constexpr const_iterator cend() const noexcept {
+    constexpr const_iterator cend() const noexcept 
+    {
         return end();
     }
 
-    constexpr const_iterator lower_bound(const key_type& key) const noexcept {
+    constexpr const_iterator lower_bound(const key_type& key) const noexcept 
+    {
         return bound<less>(data_, data_ + N, compare_key_type{ key });
     }
 
-    constexpr const_iterator upper_bound(const key_type& key) const noexcept {
+    constexpr const_iterator upper_bound(const key_type& key) const noexcept 
+    {
         return bound<greater_equal>(data_, data_ + N, compare_key_type{ key });
     }
 
-    constexpr std::pair<const_iterator, const_iterator> equal_range(const key_type& key) const noexcept {
+    constexpr std::pair<const_iterator, const_iterator> equal_range(const key_type& key) const noexcept 
+    {
         const compare_key_type compare_key{ key };
         auto first = bound<less>(data_, data_ + N, compare_key);
         return { first, bound<greater_equal>(first, data_ + N, compare_key) };
     }
 
-    constexpr std::size_t count(const key_type& key) const noexcept {
+    constexpr std::size_t count(const key_type& key) const noexcept 
+    {
         const auto range = equal_range(key);
         return range.second - range.first;
     }
 
-    constexpr const_iterator find(const key_type& key) const noexcept {
+    constexpr const_iterator find(const key_type& key) const noexcept 
+    {
         const compare_key_type compare_key{ key };
         auto it = bound<less>(data_, data_ + N, compare_key);
         if (it != data_ + N && greater_equal()(*it, compare_key)) {
@@ -295,20 +342,115 @@ public:
         }
     }
 
-    constexpr bool contains(const key_type& key) const noexcept {
+    constexpr bool contains(const key_type& key) const noexcept 
+    {
         return find(key) != end();
     }
 };
 
+template <typename Element>
+class map_c<Element, 0> 
+{
+public:
+    constexpr map_c(std::nullptr_t npt) noexcept
+    {
+
+    }
+    using compare_key_type = typename Element::compare_key_type;
+    using key_type = typename Element::key_type;
+    using mapped_type = typename Element::mapped_type;
+    using value_type = typename Element::value_type;
+    using size_type = std::size_t;
+    using difference_type = std::ptrdiff_t;
+    using const_reference = const value_type&;
+    using const_pointer = const value_type*;
+    using const_iterator = iterator<Element>;
+
+    const Element* data_ = nullptr;
+    
+    constexpr bool unique() const noexcept 
+    {
+        return true;
+    }
+
+    constexpr const mapped_type& at(const key_type& key) const noexcept 
+    {
+        return find(key)->second;
+    }
+
+    static constexpr int size() noexcept 
+    {
+        return 0;
+    }
+
+    constexpr const_iterator begin() const noexcept 
+    {
+        return data_;
+    }
+
+    constexpr const_iterator cbegin() const noexcept 
+    {
+        return begin();
+    }
+
+    constexpr const_iterator end() const noexcept 
+    {
+        return data_;
+    }
+    constexpr const_iterator cend() const noexcept 
+    {
+        return end();
+    }
+
+    constexpr const_iterator lower_bound(const key_type& key) const noexcept 
+    {
+        return bound<less>(data_, data_, compare_key_type{ key });
+    }
+
+    constexpr const_iterator upper_bound(const key_type& key) const noexcept 
+    {
+        return bound<greater_equal>(data_, data_, compare_key_type{ key });
+    }
+
+    constexpr std::pair<const_iterator, const_iterator> equal_range(const key_type& key) const noexcept 
+    {
+        const compare_key_type compare_key{ key };
+        auto first = bound<less>(data_, data_, compare_key);
+        return { first, bound<greater_equal>(first, data_, compare_key) };
+    }
+
+    constexpr std::size_t count(const key_type& key) const noexcept 
+    {
+        const auto range = equal_range(key);
+        return range.second - range.first;
+    }
+
+    constexpr const_iterator find(const key_type& key) const noexcept 
+    {
+        return end();
+    }
+    constexpr bool contains(const key_type& key) const noexcept 
+    {
+        return false;
+    }
+};
+
+template<typename T>
+struct ____map_size
+{
+	inline constexpr static const auto value = std::decay_t<T>::size();
+};
 } // namespace detail
 
 template <typename Key, typename Value, std::size_t N>
-static constexpr auto map_c(const std::pair<const Key, const Value> (&items)[N]) noexcept {
+static constexpr auto map_c(const std::pair<const Key, const Value> (&items)[N]) noexcept 
+{
     return detail::map_c<detail::element<Key, Value>, N>(items);
 }
 
 template <typename Key, typename Value, std::size_t N>
-static constexpr auto unordered_map_c(const std::pair<const Key, const Value> (&items)[N]) noexcept {
+static constexpr auto unordered_map_c(const std::pair<const Key, const Value> (&items)[N]) noexcept 
+{
     return detail::map_c<detail::element_hash<Key, Value>, N>(items);
 }
 
@@ -331,15 +473,18 @@ constexpr std::size_t hash_prime =
 
 // FNV-1a hash
 constexpr static std::size_t str_hash(const char* str,
-                                      const std::size_t value = hash_offset) noexcept {
+    const std::size_t value = hash_offset) noexcept 
+{
     return *str ? str_hash(str + 1, (value ^ static_cast<std::size_t>(*str)) * hash_prime) : value;
 }
 
-constexpr bool str_less(const char* lhs, const char* rhs) noexcept {
+constexpr bool str_less(const char* lhs, const char* rhs) noexcept 
+{
     return *lhs && *rhs && *lhs == *rhs ? str_less(lhs + 1, rhs + 1) : *lhs < *rhs;
 }
 
-constexpr bool str_equal(const char* lhs, const char* rhs) noexcept {
+constexpr bool str_equal(const char* lhs, const char* rhs) noexcept 
+{
     return *lhs == *rhs && (*lhs == '\0' || str_equal(lhs + 1, rhs + 1));
 }
 
@@ -347,13 +492,14 @@ constexpr bool str_equal(const char* lhs, const char* rhs) noexcept {
 
 } // namespace Sakura
 
-namespace std {
-template <>
-struct hash<std::string_view> {
-    constexpr std::size_t operator()(const std::string_view& str) const {
-        return ::Sakura::detail::str_hash(str.data());
-    }
-};
-
-
+namespace std 
+{
+    template <>
+    struct hash<std::string_view> 
+    {
+        constexpr std::size_t operator()(const std::string_view& str) const 
+        {
+            return ::Sakura::detail::str_hash(str.data());
+        }
+    };
 } // namespace std

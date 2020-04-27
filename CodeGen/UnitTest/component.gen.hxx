@@ -1,4 +1,4 @@
-//generated time:1587961399
+//generated time:1587979927
 //generated end
 
 
@@ -14,29 +14,29 @@ struct ClassInfo<Test::TestComponent>
 	{
 		return "Test::TestComponent";
 	}
-	inline static const constexpr Meta::MetaPiece meta[2] = 
-	{
-		{"descriptions", "This is a test component"},
-		{"refl", "null"}
-	};
+	inline static const constexpr auto meta = 
+	Sakura::unordered_map_c<std::string_view, std::string_view>({
+		{"descriptions"sv, "This is a test component"},
+		{"refl"sv, "null"sv}
+	});
 
-	inline static const constexpr Meta::MetaPiece testContainer_meta[2] = 
-	{
-		{"container", "This is a container!"},
-		{"refl", "null"}
-	};
+	inline static const constexpr auto testContainer_meta = 
+	Sakura::unordered_map_c<std::string_view, std::string_view>({
+		{"container"sv, "This is a container!"},
+		{"refl"sv, "null"sv}
+	});
 
-	inline static const constexpr Meta::MetaPiece staticAttrib_meta[2] = 
-	{
-		{"meta", "This is a static attribute"},
-		{"refl", "null"}
-	};
+	inline static const constexpr auto staticAttrib_meta = 
+	Sakura::unordered_map_c<std::string_view, std::string_view>({
+		{"meta"sv, "This is a static attribute"},
+		{"refl"sv, "null"sv}
+	});
 
-	inline static const constexpr Meta::MetaPiece Method_meta[2] = 
-	{
-		{"meta", "Can't wait to use compile-time-reflection"},
-		{"refl", "null"}
-	};
+	inline static const constexpr auto Method_meta = 
+	Sakura::unordered_map_c<std::string_view, std::string_view>({
+		{"meta"sv, "Can't wait to use compile-time-reflection"},
+		{"refl"sv, "null"sv}
+	});
 
 	SFIELD_INFO(testContainer, Test::TestComponent, testContainer_meta);
 	inline static const constexpr auto all_fields()
@@ -62,16 +62,16 @@ struct ClassInfo<Test::TestComponentWrap>
 	{
 		return "Test::TestComponentWrap";
 	}
-	inline static const constexpr Meta::MetaPiece meta[1] = 
-	{
-		{"refl", "null"}
-	};
+	inline static const constexpr auto meta = 
+	Sakura::unordered_map_c<std::string_view, std::string_view>({
+		{"refl"sv, "null"sv}
+	});
 
-	inline static const constexpr Meta::MetaPiece comp_meta[2] = 
-	{
-		{"description", "Test wrapping of reflection component"},
-		{"refl", "null"}
-	};
+	inline static const constexpr auto comp_meta = 
+	Sakura::unordered_map_c<std::string_view, std::string_view>({
+		{"description"sv, "Test wrapping of reflection component"},
+		{"refl"sv, "null"sv}
+	});
 
 	SFIELD_INFO(comp, Test::TestComponentWrap, comp_meta);
 	inline static const constexpr auto all_fields()
@@ -87,25 +87,25 @@ struct EnumInfo<Test::TestEnum>
 	{
 		return "Test::TestEnum";
 	}
-	inline static const constexpr Meta::MetaPiece meta[1] = 
-	{
-		{"refl", "null"}
-	};
+	inline static const constexpr auto meta = 
+	Sakura::unordered_map_c<std::string_view, std::string_view>({
+		{"refl"sv, "null"sv}
+	});
 
-	inline static const constexpr Meta::MetaPiece E_ONE_meta[1] = 
-	{
-		{"enum", "This is enum one"}
-	};
+	inline static const constexpr auto E_ONE_meta = 
+	Sakura::unordered_map_c<std::string_view, std::string_view>({
+		{"enum"sv, "This is enum one"}
+	});
 
-	inline static const constexpr Meta::MetaPiece E_TWO_meta[1] = 
-	{
-		{"enum", "This is enum two"}
-	};
+	inline static const constexpr auto E_TWO_meta = 
+	Sakura::unordered_map_c<std::string_view, std::string_view>({
+		{"enum"sv, "This is enum two"}
+	});
 
-	inline static const constexpr Meta::MetaPiece E_THREE_meta[1] = 
-	{
-		{"enum", "This is enum three"}
-	};
+	inline static const constexpr auto E_THREE_meta = 
+	Sakura::unordered_map_c<std::string_view, std::string_view>({
+		{"enum"sv, "This is enum three"}
+	});
 
 	SENUM_FIELD_INFO(E_ONE, Test::TestEnum, E_ONE_meta);
 	SENUM_FIELD_INFO(E_TWO, Test::TestEnum, E_TWO_meta);

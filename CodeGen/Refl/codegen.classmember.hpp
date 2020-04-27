@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2020-04-16 16:26:13
- * @LastEditTime: 2020-04-25 01:16:34
+ * @LastEditTime: 2020-04-27 17:27:07
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /SakuraAutoCoder/CodeGen/Refl/codegen.classmember.hpp
@@ -22,23 +22,23 @@ namespace Sakura::refl
 			{
 				output << punctuation("\t");
 				detail::inline_static_const_constexpr(output);
-				output << identifier("Meta::MetaPiece") << cppast::whitespace << identifier(prefix + "meta")
-					<< punctuation("[") << cppast::int_literal(std::to_string(data.size())) << punctuation("] = \n\t{");
+				output << identifier("auto") << cppast::whitespace << identifier(prefix + "meta")
+					<< punctuation(" = \n\tSakura::unordered_map_c<std::string_view, std::string_view>({");
 				auto i = 0u;
 				for (auto iter = data.begin(); iter != data.end(); iter++)
 				{
 					i++;
 					output << punctuation("\n\t\t{") 
-						<< cppast::string_literal("\"" + iter->first + "\"")
+						<< cppast::string_literal("\"" + iter->first + "\"sv")
 						<< punctuation(", ") 
 						<< ((iter->second.size() > 0) ?
 						cppast::string_literal(iter->second) : 
-						cppast::string_literal("\"null\""))
+						cppast::string_literal("\"null\"sv"))
 						<< punctuation("}");
 					if (i != data.size())
 						output << punctuation(",");
 				}
-				output << punctuation("\n\t};\n\n");
+				output << punctuation("\n\t});\n\n");
 			}
 		}
 

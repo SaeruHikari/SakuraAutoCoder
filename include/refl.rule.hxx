@@ -1,7 +1,7 @@
 ﻿/*
  * @Author: your name
  * @Date: 2020-04-04 12:32:09
- * @LastEditTime: 2020-04-27 12:25:46
+ * @LastEditTime: 2020-04-27 23:35:28
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \undefinedd:\Coding\SakuraAutoCoder\CodeGen\refl.rule.hxx
@@ -17,7 +17,7 @@
 #include <map>
 #include <vector>
 #include <cassert>
-
+#include <constexpr_map.hpp>
 
 using namespace std;
 namespace std::pmr
@@ -69,13 +69,13 @@ namespace Sakura::refl
 
 		template<typename F, typename T, std::size_t N, std::size_t... Idx>
 		constexpr bool matching_impl(const std::string_view tag, F&& func,
-			T(&t)[N], std::index_sequence<Idx...>)
+			const Sakura::detail::map_c<T, N>& t, std::index_sequence<Idx...>)
 		{
-			return (func(tag, t[Idx].title)|...);
+			return ((func(tag, t.data_[N - 1 -Idx]->first) ? true : false) | ...);
 		}
 		template <typename F, typename T, std::size_t N>
 		constexpr decltype(auto) matching(const std::string_view tag, 
-			F&& f, T (&t)[N]) 
+			F&& f, const Sakura::detail::map_c<T, N>& t) 
 		{
 			return matching_impl(tag, f, t, std::make_index_sequence<N>{});   
 		}
@@ -116,55 +116,40 @@ struct has_member_##s{\
     enum{value=!std::is_void<type>::value};\
 };
 
-#define SFIELD_INFO(NAME, MOTHER_BOARD, array, ...) \
+#define SFIELD_INFO(NAME, MOTHER_BOARD, map, ...) \
 	static struct NAME##_info{\
 		constexpr NAME##_info() = default;\
-		constexpr static const FieldWithMeta<Sakura::refl::detail::arraySize(array)> fd =\
-		FieldWithMeta<Sakura::refl::detail::arraySize(array)>(#NAME,\
+		constexpr static const FieldWithMeta<Sakura::detail::____map_size<decltype(map)>::value> info =\
+		FieldWithMeta<Sakura::detail::____map_size<decltype(map)>::value>(#NAME,\
 			Sakura::refl::decay_type_name<decltype(std::declval<MOTHER_BOARD>().NAME)>(),\
-			offsetof(MOTHER_BOARD, NAME), array);\
-		template<typename F>\
-		constexpr static const bool matching(const std::string_view tag, F&& func)\
-		{return Sakura::refl::detail::matching(tag, func, array);}\
+			offsetof(MOTHER_BOARD, NAME), map);\
 		decltype(&MOTHER_BOARD::NAME) ptr = &MOTHER_BOARD::NAME;\
 	};
 
-#define SMETHOD_INFO(NAME, MOTHER_BOARD, array, ...) \
+#define SMETHOD_INFO(NAME, MOTHER_BOARD, map, ...) \
 	struct NAME##_info{\
 		constexpr NAME##_info() = default;\
-		constexpr static const FieldWithMeta<Sakura::refl::detail::arraySize(array)> fd = \
-		FieldWithMeta<Sakura::refl::detail::arraySize(array)>(#NAME,\
-		Sakura::refl::decay_type_name<decltype(&MOTHER_BOARD::NAME)>(),\
-		0, array);\
-		template<typename F>\
-		constexpr static const bool matching(const std::string_view tag, F&& func)\
-		{return Sakura::refl::detail::matching(tag, func, array);}\
+		constexpr static const FieldWithMeta<Sakura::detail::____map_size<decltype(map)>::value> info = \
+		FieldWithMeta<Sakura::detail::____map_size<decltype(map)>::value>(#NAME,\
+		Sakura::refl::decay_type_name<decltype(&MOTHER_BOARD::NAME)>(), 0, map);\
 		decltype(&MOTHER_BOARD::NAME) ptr = &MOTHER_BOARD::NAME;\
 	};
 
-#define SSTATICFIELD_INFO(NAME, MOTHER_BOARD, array, ...)  \
+#define SSTATICFIELD_INFO(NAME, MOTHER_BOARD, map, ...)  \
 	struct NAME##_info{\
 		constexpr NAME##_info() = default;\
-		constexpr static const FieldWithMeta<Sakura::refl::detail::arraySize(array)> fd = \
-		FieldWithMeta<Sakura::refl::detail::arraySize(array)>(#NAME,\
-		Sakura::refl::decay_type_name<decltype(&MOTHER_BOARD::NAME)>(),\
-		0, array);\
-		template<typename F>\
-		constexpr static const bool matching(const std::string_view tag, F&& func)\
-		{return Sakura::refl::detail::matching(tag, func, array);}\
+		constexpr static const FieldWithMeta<Sakura::detail::____map_size<decltype(map)>::value> info = \
+		FieldWithMeta<Sakura::detail::____map_size<decltype(map)>::value>(#NAME,\
+		Sakura::refl::decay_type_name<decltype(&MOTHER_BOARD::NAME)>(), 0, map);\
 		decltype(&MOTHER_BOARD::NAME) ptr = &MOTHER_BOARD::NAME;\
 	};
 
-#define SENUM_FIELD_INFO(NAME, MOTHER_BOARD, array, ...) \
+#define SENUM_FIELD_INFO(NAME, MOTHER_BOARD, map, ...) \
 	struct NAME##_info{\
 		constexpr NAME##_info() = default;\
-		constexpr static const FieldWithMeta<Sakura::refl::detail::arraySize(array)> fd = \
-		FieldWithMeta<Sakura::refl::detail::arraySize(array)>(#NAME,\
-		Sakura::refl::decay_type_name<MOTHER_BOARD>(),\
-		0, array);\
-		template<typename F>\
-		constexpr static const bool matching(const std::string_view tag, F&& func)\
-		{return Sakura::refl::detail::matching(tag, func, array);}\
+		constexpr static const FieldWithMeta<Sakura::detail::____map_size<decltype(map)>::value> info = \
+		FieldWithMeta<Sakura::detail::____map_size<decltype(map)>::value>(#NAME,\
+		Sakura::refl::decay_type_name<MOTHER_BOARD>(), 0, map);\
 		MOTHER_BOARD val = MOTHER_BOARD::NAME;\
 	};
 
@@ -286,35 +271,6 @@ namespace Sakura::refl
 	}
 
 
-	struct Meta
-	{
-		struct MetaPiece
-		{
-			constexpr MetaPiece(const char* _t, const char* _v)
-				: title(_t), value(_v)
-			{}
-			const std::string_view title = nullptr;
-			const std::string_view value = nullptr;
-		};
-		constexpr Meta(const MetaPiece* _ms, uint32_t _mc)
-			:metas(_ms), metaCount(_mc)
-		{
-
-		}
-		template<int N>
-		constexpr Meta(const MetaPiece(&_ms)[N])
-			: metas(_ms), metaCount(N)
-		{
-
-		}
-		constexpr Meta(const std::nullptr_t npt)
-		{
-
-		}
-		const MetaPiece* metas = nullptr;//8 36
-		const uint32_t metaCount = 0;//4 40
-	};
-	
 	struct Field
 	{
 		constexpr Field(const std::string_view _n, std::string_view _t,
@@ -333,8 +289,9 @@ namespace Sakura::refl
 	template<int N>
 	struct FieldWithMeta final : public Field
 	{
-		constexpr FieldWithMeta(const std::string_view _n, std::string_view _t,
-			uint32_t _o, const Meta::MetaPiece(&_ms)[N])
+		constexpr FieldWithMeta(
+			const std::string_view _n, std::string_view _t, uint32_t _o,
+			const Sakura::detail::map_c<Sakura::detail::element_hash<std::string_view, std::string_view>, N>& _ms)
 			: Field(_n, _t, _o), metas(_ms)
 		{
 			
@@ -343,7 +300,7 @@ namespace Sakura::refl
 		{
 			return N;
 		}
-		const Meta::MetaPiece(&metas)[N];
+		const Sakura::detail::map_c<Sakura::detail::element_hash<std::string_view, std::string_view>, N>& metas;
 	};
 
 	template<>
@@ -359,7 +316,7 @@ namespace Sakura::refl
 		{
 			return 0;
 		}
-		const Meta::MetaPiece* metas = nullptr;
+		const Sakura::detail::map_c<Sakura::detail::element_hash<std::string_view, std::string_view>, 0> metas = nullptr;
 	};
 	
 	// Reference is a non-const, type erased wrapper around any object.
@@ -427,10 +384,6 @@ namespace Sakura::refl
 		inline static constexpr const auto all_static_fields() { return std::make_tuple(); }\
 		inline static constexpr const auto all_methods() { return std::make_tuple(); }\
 		inline static constexpr const auto all_static_methods() { return std::make_tuple(); }\
-		inline static const constexpr Meta::MetaPiece meta[1] =\
-		{\
-			{"description", "Class of "#T}\
-		};\
 	};
 
 
@@ -492,7 +445,6 @@ namespace Sakura::refl
 		using EnumName = std::decay_t<T>;
 		using info = EnumInfo<EnumName>;
 		inline static const constexpr char* GetName(){return info::GetEnumName();}
-		inline static const constexpr Meta GetEnumMeta(){return Meta(info::meta);}
 		inline static const constexpr std::size_t id_ =
 			detail::_Fnv1a_append_bytes(Sakura::refl::detail::_FNV_offset_basis,
 				info::GetEnumName(), detail::length(info::GetEnumName()) * sizeof(char));
@@ -504,7 +456,7 @@ namespace Sakura::refl
 			detail::ForEachTuple(info::all_static_fields(),
 				[&fn](auto&& field_schema)
 				{
-					fn(field_schema.val, field_schema.fd);
+					fn(field_schema.val, field_schema.info);
 				});
 		}
 	};
@@ -520,7 +472,6 @@ namespace Sakura::refl
 		using ClassName = std::decay_t<T>;
 		using info = ClassInfo<ClassName>;
 		inline static const constexpr char* GetName() { return info::GetClassName(); }
-		inline static const constexpr Meta GetClassMeta() { return Meta(info::meta); }
 		inline static const constexpr std::size_t id_ =
 			detail::_Fnv1a_append_bytes(Sakura::refl::detail::_FNV_offset_basis,
 				info::GetClassName(), detail::length(info::GetClassName()) * sizeof(char));
@@ -556,7 +507,7 @@ namespace Sakura::refl
 			detail::ForEachTuple(std::forward<Tuple>(tup),
 				[&fn](auto&& field_schema)
 				{
-					fn(field_schema);
+					fn(field_schema.info);
 				});
 		}
 
@@ -579,7 +530,7 @@ namespace Sakura::refl
 						}
 					}
 					else
-						fn(value.*(field_schema.ptr), field_schema);
+						fn(value.*(field_schema.ptr), field_schema.info);
 				});
 		}
 
@@ -593,7 +544,7 @@ namespace Sakura::refl
 					if constexpr (!isAtomic<ClassName_CS>() && atomic)
 						SClass<ClassName_CS>::ForEachFieldAtomic(*(field_schema.ptr), fn);
 					else
-						fn(*field_schema.ptr, field_schema);
+						fn(*field_schema.ptr, field_schema.info);
 				});
 		}
 
@@ -654,7 +605,7 @@ namespace Sakura::refl
 				detail::ForEachTuple(info::all_methods(),
 					[&value, &fn](auto&& field_schema)
 					{
-						fn(field_schema.ptr, field_schema.fd);
+						fn(field_schema.ptr, field_schema.info);
 					});
 			return;
 		}

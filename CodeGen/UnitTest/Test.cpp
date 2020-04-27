@@ -1,7 +1,7 @@
 ﻿/*
  * @Author: your name
  * @Date: 2020-04-22 00:49:46
- * @LastEditTime: 2020-04-27 16:37:57
+ * @LastEditTime: 2020-04-27 23:33:05
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /SakuraAutoCoder/CodeGen/UnitTest/Test.cpp
@@ -13,17 +13,6 @@
 
 using namespace Sakura::refl;
 
-template <typename F, typename T, std::size_t N, std::size_t... Idx>
-decltype(auto) call_impl(F f, T(&t)[N], std::index_sequence<Idx...>) 
-{
-    return f(t[Idx]...);
-}
-template <typename F, typename T, std::size_t N>
-decltype(auto) call(F f, T (&t)[N]) 
-{
-    return call_impl(f, t, std::make_index_sequence<N>{});   
-}
-int arr[4] = {1, 2, 3, 4};
 has_member(attrib);
 
 template<typename T>
@@ -46,37 +35,31 @@ void auto_func_template(T&& field, const Field& meta,
 	}
 }
 
-
-struct Color
+constexpr bool sv_same(std::string_view s, std::string_view t)
 {
-	float R;
-	float G;
-	float B;
-	float A;
-};
-constexpr static auto const colors =
-	Sakura::unordered_map_c<std::string_view, Color>({
-		{ "red"sv, { 255, 0, 0, 1 } },
-		{ "green"sv, { 0, 128, 0, 1 } },
-		{ "yellow"sv, { 255, 255, 0, 1 } },
-		{ "white"sv, { 255, 255, 255, 1 } },
-		{ "black"sv, { 0, 0, 0, 1 } }
-	});
-
+    return s == t;
+}
+constexpr static const Sakura::detail::map_c<
+	Sakura::detail::element<std::string_view, std::string_view>, 0> 
+	dsd(nullptr);
 int main(void)
 {
-	constexpr bool value = has_member_attrib<Test::TestComponent>::value;
-	constexpr auto c = colors.find("red"sv)->second;
+	constexpr bool c = dsd.contains("sds"sv);
 	//std::cout << call([](int, int, int, int){return 5;}, arr);
 	Test::TestComponent testComp;
 	Test::TestComponentWrap testCompWrap;
+	SClass<std::decay<decltype(testComp)>::type>::ForEachField(
+        testComp, [](auto&& field, auto&& info){
+            constexpr const std::string_view tag = "container";
+            
+			if (info.metas.find("container") != info.metas.end())
+				std::cout << info.metas.find("container")->second << std::endl;
+    });
 	SClass<std::decay<decltype(testComp)>::type>::ForEachField(testComp,
-		[](auto&& field, auto&& meta) {
-			std::cout << meta.fd.type << " - " << meta.fd.name << std::endl;
+		[](auto&& field, auto&& info) {
+			std::cout << info.type << " - " << info.name << std::endl;
 		});
 
-	std::cout << std::endl << std::endl;
-	
 	// lambda: not so conveniet to call	recursively...use tempalte
 	/*
 	decltype(auto) accessor = 
