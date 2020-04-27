@@ -70,8 +70,21 @@ namespace Sakura::refl
 		{
 			output << punctuation("\t");
 			detail::inline_static_const_constexpr(output);
-			output << keyword("const") << cppast::whitespace << cppast::identifier("char*")
+			output << keyword("const") << cppast::whitespace << cppast::identifier("std::string_view")
 				<< cppast::whitespace << identifier("GetClassName") << punctuation("()") 
+				<< cppast::newl << cppast::punctuation("\n\t{\n");
+			output << cppast::punctuation("\t\t") << keyword("return") << cppast::whitespace
+					<< cppast::token_seq("Sakura::refl::decay_type_name<")
+					<< cppast::identifier(get_class_entity_Name_sp(c)) << cppast::token_seq(">()")
+					<< cppast::punctuation(";\n\t}\n");
+		}
+
+		void gen_getPrettyName(code_generator::output& output, const cpp_class& c)
+		{
+			output << punctuation("\t");
+			detail::inline_static_const_constexpr(output);
+			output << keyword("const") << cppast::whitespace << cppast::identifier("std::string_view")
+				<< cppast::whitespace << identifier("GetPrettyName") << punctuation("()") 
 				<< cppast::newl << cppast::punctuation("\n\t{\n");
 			output << cppast::punctuation("\t\t") << keyword("return") << cppast::whitespace <<
 				cppast::string_literal("\"") <<
@@ -138,6 +151,7 @@ namespace Sakura::refl
 			else // If class is not tagged with refl, return directly
 				return true;
 			detail::gen_getClassName(output, c);
+			detail::gen_getPrettyName(output, c);
 			detail::gen_meta(output, "", reflUnit.unitMetas);
 			// Iterate
 			for (auto& member : c)

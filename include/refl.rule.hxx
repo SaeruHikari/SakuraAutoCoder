@@ -1,7 +1,7 @@
 ﻿/*
  * @Author: your name
  * @Date: 2020-04-04 12:32:09
- * @LastEditTime: 2020-04-27 23:35:28
+ * @LastEditTime: 2020-04-28 00:39:13
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \undefinedd:\Coding\SakuraAutoCoder\CodeGen\refl.rule.hxx
@@ -27,20 +27,14 @@ namespace std::pmr
 
 namespace Sakura::refl
 {
-	class Object;
-	class Reference;
-	class IType;
 	namespace detail 
 	{
-		template<typename T> struct declval_helper { static T value; };
-
 		template<typename T, typename Z, Z T::*MPtr>
 		struct offset_helper 
 		{
-			using TV = declval_helper<T>;
 			char for_sizeof[
-				(char *)&(TV::value.*MPtr) -
-				(char *)&TV::value
+				(char *)&(std::declval<std::decay_t<T>>.*MPtr) -
+				(char *)&std::declval<std::decay_t<T>>
 			];
 		};
 
@@ -54,49 +48,6 @@ namespace Sakura::refl
 		{
 			return 0;
 		}
-
-		template <typename F, typename T, typename... Args, std::size_t N, std::size_t... Idx>
-		constexpr decltype(auto) _arr_call_impl(F f, T(&t)[N], std::index_sequence<Idx...>,
-			Args&&... args) 
-		{
-			return f(args..., t[Idx]...);
-		}
-		template <typename F, typename T, typename... Args, std::size_t N>
-		constexpr decltype(auto) arr_unfold_call(F f, T (&t)[N], Args&&... args) 
-		{
-			return _arr_call_impl(f, t, std::make_index_sequence<N>{}, args...);   
-		}
-
-		template<typename F, typename T, std::size_t N, std::size_t... Idx>
-		constexpr bool matching_impl(const std::string_view tag, F&& func,
-			const Sakura::detail::map_c<T, N>& t, std::index_sequence<Idx...>)
-		{
-			return ((func(tag, t.data_[N - 1 -Idx]->first) ? true : false) | ...);
-		}
-		template <typename F, typename T, std::size_t N>
-		constexpr decltype(auto) matching(const std::string_view tag, 
-			F&& f, const Sakura::detail::map_c<T, N>& t) 
-		{
-			return matching_impl(tag, f, t, std::make_index_sequence<N>{});   
-		}
-		template <typename F>
-		constexpr decltype(auto) matching(const std::string_view tag, 
-			F&& f, void* npt) 
-		{
-			return false;   
-		}
-
-		template<typename T>
-		constexpr bool has_tag(const std::string_view tag, T&& src)
-		{
-			return src == tag;
-		}
-
-		template<typename T>
-		constexpr bool has_tag_series(const std::string_view tag, T&& src)
-		{
-			return src.starts_with(tag);
-		}
 	}
 
 	template<typename T, typename Z, Z T::*MPtr>
@@ -104,7 +55,6 @@ namespace Sakura::refl
 	{
 		return sizeof(detail::offset_helper<T, Z, MPtr>::for_sizeof);
 	}
-
 }
 
 #define has_member(s)\
@@ -184,8 +134,6 @@ namespace Sakura::refl
 	{
 		return type_name<std::decay_t<T>>();
 	}
-	// Object is a class similar in nature to std::any, only it does not require
-	// C++17 and does not require stored objects to be copyable.
 
 	inline void NoOp(void*) {}
 
@@ -247,26 +195,6 @@ namespace Sakura::refl
 		int constexpr length(const char* str)
 		{
 			return *str ? 1 + length(str + 1) : 0;
-		}
-
-#if true
-		inline constexpr static const size_t _FNV_offset_basis = 14695981039346656037ULL;
-		inline constexpr static const size_t _FNV_prime = 1099511628211ULL;
-#else 
-		inline constexpr static const size_t _FNV_offset_basis = 2166136261U;
-		inline constexpr static const size_t _FNV_prime = 16777619U;
-#endif 
-
-		inline static const constexpr size_t _Fnv1a_append_bytes(size_t _Val, const char* _First,
-			const size_t _Count) noexcept
-		{
-			// accumulate range [_First, _First + _Count) into partial FNV-1a hash _Val
-			for (size_t _Idx = 0; _Idx < _Count; ++_Idx)
-			{
-				_Val ^= static_cast<size_t>(_First[_Idx]);
-				_Val *= _FNV_prime;
-			}
-			return _Val;
 		}
 	}
 
@@ -358,7 +286,14 @@ namespace Sakura::refl
 	template<typename T>
 	struct ClassInfo
 	{
-		inline static const constexpr char* GetClassName() { return "NULL"; }
+		inline static const constexpr std::string_view GetClassName()
+		{ 
+			return Sakura::refl::decay_type_name<T>(); 
+		}
+		inline static const constexpr std::string_view GetPrettyName()
+		{ 
+			return Sakura::refl::decay_type_name<T>(); 
+		}
 		inline static constexpr const auto all_methods() { return std::make_tuple(); }
 		inline static constexpr const auto all_fields() { return std::make_tuple(); }
 		inline static constexpr const auto all_static_fields() { return std::make_tuple(); }
@@ -367,10 +302,7 @@ namespace Sakura::refl
 	template<typename T>
 	struct EnumInfo
 	{
-		inline static const constexpr char* GetEnumName() { return "NULL"; }
-		//inline static const constexpr Meta::MetaPiece meta = {...};
-		//inline static const constexpr Meta::MetaPiece meta_EONE = {...}; 
-		//inline static constexpr Meta perMeta[n] = {...};
+		inline static const constexpr std::string_view GetEnumName() { return "NULL"; }
 	};
 
 	using namespace std;
@@ -379,7 +311,7 @@ namespace Sakura::refl
 	template<> inline const constexpr bool isAtomic<T>(){return true;}\
 	template<> struct ClassInfo<T>\
 	{\
-		inline static const constexpr char* GetClassName(){return #NAME;}\
+		inline static const constexpr std::string_view GetClassName(){return #NAME;}\
 		inline static constexpr const auto all_fields() { return std::make_tuple(); }\
 		inline static constexpr const auto all_static_fields() { return std::make_tuple(); }\
 		inline static constexpr const auto all_methods() { return std::make_tuple(); }\
@@ -446,8 +378,7 @@ namespace Sakura::refl
 		using info = EnumInfo<EnumName>;
 		inline static const constexpr char* GetName(){return info::GetEnumName();}
 		inline static const constexpr std::size_t id_ =
-			detail::_Fnv1a_append_bytes(Sakura::refl::detail::_FNV_offset_basis,
-				info::GetEnumName(), detail::length(info::GetEnumName()) * sizeof(char));
+			Sakura::detail::str_hash(info::GetEnumName());
 		inline static const constexpr std::size_t GetTypeId() { return id_; }
 
 		template <typename Fn>
@@ -473,8 +404,7 @@ namespace Sakura::refl
 		using info = ClassInfo<ClassName>;
 		inline static const constexpr char* GetName() { return info::GetClassName(); }
 		inline static const constexpr std::size_t id_ =
-			detail::_Fnv1a_append_bytes(Sakura::refl::detail::_FNV_offset_basis,
-				info::GetClassName(), detail::length(info::GetClassName()) * sizeof(char));
+			Sakura::detail::str_hash(info::GetClassName().data());
 		inline static const constexpr std::size_t GetTypeId() { return id_; }
 		inline static const constexpr std::size_t GetStaticFieldCount() noexcept
 		{
@@ -551,20 +481,20 @@ namespace Sakura::refl
 		template <typename Fn>
 		inline static constexpr void ForEachFieldMeta(Fn&& fn)
 		{
-			if constexpr (has_member_all_methods<ClassInfo<ClassName>>::value)
+			if constexpr (has_member_all_fields<ClassInfo<ClassName>>::value)
 				__for_each_field_meta_impl<false>(info::all_fields(), fn);
 		}
 		template <typename V, typename Fn>
 		inline static constexpr void ForEachField(V&& value, Fn&& fn)
 		{
-			if constexpr (has_member_all_methods<ClassInfo<ClassName>>::value)
+			if constexpr (has_member_all_fields<info>::value)
 				__for_each_field_impl<false>(info::all_fields(), value, fn);
 			return;
 		}
 		template <typename V, typename Fn>
 		inline static constexpr void ForEachFieldAtomic(V&& value, Fn&& fn)
 		{
-			if constexpr (has_member_all_methods<ClassInfo<ClassName>>::value)
+			if constexpr (has_member_all_fields<ClassInfo<ClassName>>::value)
 				__for_each_field_impl<true>(info::all_fields(), value, fn);
 			return;
 		}

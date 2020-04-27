@@ -17,7 +17,11 @@ namespace fs = std::filesystem;
 
 extern std::unordered_map<std::string, Sakura::refl::ReflUnit> ReflUnits = {};
 extern bool bDebugAST = false;
-
+extern std::unordered_map<std::string, int> non_meta_attributes = 
+{
+	{ "refl" , 0 }, 
+	{ "prettyname", 1 }
+};
 
 // print help options
 void print_help(const cxxopts::Options& options)

@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2020-04-24 23:23:46
- * @LastEditTime: 2020-04-25 02:07:24
+ * @LastEditTime: 2020-04-28 00:22:32
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /SakuraAutoCoder/CodeGen/Refl/codegem.class.cpp
@@ -36,7 +36,7 @@ void gen_getEnumName(code_generator::output& output, const cppast::cpp_enum& c)
 {
     output << punctuation("\t");
     detail::inline_static_const_constexpr(output);
-    output << keyword("const") << cppast::whitespace << cppast::identifier("char*")
+    output << keyword("const") << cppast::whitespace << cppast::identifier("std::string_view")
         << cppast::whitespace << identifier("GetEnumName") << punctuation("()") 
         << cppast::newl << cppast::punctuation("\n\t{\n");
     output << cppast::punctuation("\t\t") << keyword("return") << cppast::whitespace <<

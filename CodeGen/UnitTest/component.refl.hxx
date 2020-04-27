@@ -1,7 +1,7 @@
 /*
  * @Author: your name 
  * @Date: 2020-04-04 11:12:12
- * @LastEditTime: 2020-04-27 12:23:16
+ * @LastEditTime: 2020-04-28 01:18:51
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit 
  * @FilePath: \undefinedd :\Coding\SakuraAutoCoder\CodeGen\component.refl.hxx
@@ -20,13 +20,13 @@ namespace Test
 {
 	struct [[refl]] [[descriptions("This is a test component")]] TestComponent
 	{   
-		[[meta("SaeruHikari")]]
+		[[refl]][[meta("SaeruHikari")]]
 		float attrib = 123.f;
 		
 		[[refl]][[container("This is a container!")]]
 		std::vector<float> testContainer = {1.f, 2.f, 3.f, 4.f};
 
-		[[meta("Fxxk ISO C++23")]]
+		[[refl]][[meta("Fxxk ISO C++23")]]
 		std::string name = "TestComp";
 	
 		[[refl]][[meta("This is a static attribute")]]
@@ -42,7 +42,9 @@ namespace Test
 	struct [[refl]] TestComponentWrap
 	{     
 		TestComponent comp [[refl]][[description("Test wrapping of reflection component")]];
+		[[refl]][[st("OHHHHHH")]]
 		inline static const TestComponent statComp;
+		[[refl]][[wf("ddd")]]
 		float wtf = 155.f;  
 	}; 
 	 

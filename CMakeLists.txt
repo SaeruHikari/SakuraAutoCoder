@@ -35,6 +35,7 @@ add_executable(
 	CodeGen/Refl/codegen.hpp
 	CodeGen/Refl/codegen.cpp
 	CodeGen/Refl/codegen.classmember.hpp
+	CodeGen/Refl/codegen.classmember.cpp
 	CodeGen/Refl/codegen.class.hpp
 	CodeGen/Refl/codegen.class.cpp
 	CodeGen/Refl/codegen.enum.hpp

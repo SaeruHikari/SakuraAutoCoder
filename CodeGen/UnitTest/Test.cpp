@@ -1,7 +1,7 @@
 ﻿/*
  * @Author: your name
  * @Date: 2020-04-22 00:49:46
- * @LastEditTime: 2020-04-27 23:33:05
+ * @LastEditTime: 2020-04-28 01:17:41
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /SakuraAutoCoder/CodeGen/UnitTest/Test.cpp
@@ -29,7 +29,7 @@ void auto_func_template(T&& field, const Field& meta,
 		std::cout << "FOREACH OF CHILD FIELD:\n";
 		SClass<TT>::ForEachField(field, 
 			[&](auto&& _field, auto&& _meta){
-				auto_func_template(_field, _meta.fd, meta.name);
+				auto_func_template(_field, _meta, meta.name);
 			});
 		std::cout << "END FOREACH OF CHILD FIELD\n";
 	}
@@ -55,11 +55,7 @@ int main(void)
 			if (info.metas.find("container") != info.metas.end())
 				std::cout << info.metas.find("container")->second << std::endl;
     });
-	SClass<std::decay<decltype(testComp)>::type>::ForEachField(testComp,
-		[](auto&& field, auto&& info) {
-			std::cout << info.type << " - " << info.name << std::endl;
-		});
-
+ 
 	// lambda: not so conveniet to call	recursively...use tempalte
 	/*
 	decltype(auto) accessor = 
@@ -85,7 +81,7 @@ int main(void)
 
 	SClass<std::decay<decltype(testCompWrap)>::type>::ForEachField(
 		testCompWrap, [](auto&& field, auto&& meta){
-			auto_func_template(field, meta.fd, "");
+			auto_func_template(field, meta, "");
 		});
 
 	std::cout << std::endl << std::endl;
