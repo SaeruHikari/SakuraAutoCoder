@@ -1,7 +1,7 @@
 ﻿/*
  * @Author: your name
  * @Date: 2020-04-22 00:49:46
- * @LastEditTime: 2020-04-28 01:17:41
+ * @LastEditTime: 2020-04-28 01:20:19
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /SakuraAutoCoder/CodeGen/UnitTest/Test.cpp
@@ -55,29 +55,6 @@ int main(void)
 			if (info.metas.find("container") != info.metas.end())
 				std::cout << info.metas.find("container")->second << std::endl;
     });
- 
-	// lambda: not so conveniet to call	recursively...use tempalte
-	/*
-	decltype(auto) accessor = 
-		[&](auto&& self, auto&& field, const Field& meta) {
-			using fieldT = std::decay_t<decltype(field)>;
-			auto functor  =
-				[&](auto&& field, const Field& meta){
-					self(self, field, meta);
-				};
-			if constexpr (Sakura::refl::isAtomic<fieldT>())
-				std::cout << meta.type << " - " << meta.name << std::endl;
-			else if constexpr (Sakura::refl::has_member_all_fields<ClassInfo<fieldT>>::value)
-			{
-				std::cout << "FOREACH OF CHILD FIELD:\n";
-				SClass<fieldT>::ForEachField(field, functor);
-				std::cout << "END FOREACH OF CHILD FIELD\n";
-			}
-		};
-	auto functor =
-		[&](auto&& field, const Field& meta){
-			accessor(accessor, field, meta);
-		};*/
 
 	SClass<std::decay<decltype(testCompWrap)>::type>::ForEachField(
 		testCompWrap, [](auto&& field, auto&& meta){

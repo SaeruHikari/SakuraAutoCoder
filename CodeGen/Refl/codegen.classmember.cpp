@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2020-04-28 00:26:59
- * @LastEditTime: 2020-04-28 01:08:39
+ * @LastEditTime: 2020-04-28 01:38:35
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /SakuraAutoCoder/CodeGen/Refl/codegen.classmember.cpp
@@ -75,9 +75,9 @@ void Sakura::refl::detail::gen_meta(code_generator::output& output,
                         cppast::string_literal("\"null\"sv"))
                         << punctuation("}");
                     i--;
+                    if (i != 0)
+                        output << punctuation(",");
                 }
-                if (i != 0)
-                    output << punctuation(",");
             }
             output << punctuation("\n\t});\n\n");
         }

@@ -1,7 +1,7 @@
 /*
  * @Author: your name 
  * @Date: 2020-04-04 11:12:12
- * @LastEditTime: 2020-04-28 01:18:51
+ * @LastEditTime: 2020-04-28 01:35:34
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit 
  * @FilePath: \undefinedd :\Coding\SakuraAutoCoder\CodeGen\component.refl.hxx
@@ -18,7 +18,10 @@ namespace Sakura::refl
 
 namespace Test
 {
-	struct [[refl]] [[descriptions("This is a test component")]] TestComponent
+	struct [[refl]]
+	[[descriptions("This is a test component")]] 
+	[[prettyname("Test Component")]]
+	TestComponent
 	{   
 		[[refl]][[meta("SaeruHikari")]]
 		float attrib = 123.f;

@@ -81,15 +81,20 @@ namespace Sakura::refl
 
 		void gen_getPrettyName(code_generator::output& output, const cpp_class& c)
 		{
+			std::string name = "\"" + get_class_entity_Name_sp(c) + "\"";
+			for(auto&& iter : c.attributes())
+			{
+				if(iter.name() == "prettyname")
+					name = iter.arguments().value().as_string();
+			}
 			output << punctuation("\t");
 			detail::inline_static_const_constexpr(output);
 			output << keyword("const") << cppast::whitespace << cppast::identifier("std::string_view")
 				<< cppast::whitespace << identifier("GetPrettyName") << punctuation("()") 
 				<< cppast::newl << cppast::punctuation("\n\t{\n");
-			output << cppast::punctuation("\t\t") << keyword("return") << cppast::whitespace <<
-				cppast::string_literal("\"") <<
-					cppast::string_literal(get_class_entity_Name_sp(c))
-					<< cppast::string_literal("\"") << cppast::punctuation(";\n\t}\n");
+			output << cppast::punctuation("\t\t") << keyword("return") 
+					<< cppast::whitespace << cppast::string_literal(name)
+					<< cppast::punctuation(";\n\t}\n");
 		}
 
 		void collect_method_meta(ReflField& field, const cppast::cpp_entity& member)

@@ -1,4 +1,4 @@
-//generated time:1588007939
+//generated time:1588009125
 //generated end
 
 
@@ -16,7 +16,7 @@ struct ClassInfo<Test::TestComponent>
 	}
 	inline static const constexpr const std::string_view GetPrettyName() 
 	{
-		return "Test::TestComponent";
+		return "Test Component";
 	}
 	inline static const constexpr auto meta = 
 	Sakura::unordered_map_c<std::string_view, std::string_view>({
