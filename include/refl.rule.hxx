@@ -1,7 +1,7 @@
 ﻿/*
  * @Author: your name
  * @Date: 2020-04-04 12:32:09
- * @LastEditTime: 2020-04-26 22:02:27
+ * @LastEditTime: 2020-04-27 12:25:46
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \undefinedd:\Coding\SakuraAutoCoder\CodeGen\refl.rule.hxx
@@ -18,9 +18,7 @@
 #include <vector>
 #include <cassert>
 
-#include <boost/hana.hpp>
-namespace hana = boost::hana;
-using namespace hana::literals;
+
 using namespace std;
 namespace std::pmr
 {
@@ -73,7 +71,7 @@ namespace Sakura::refl
 		constexpr bool matching_impl(const std::string_view tag, F&& func,
 			T(&t)[N], std::index_sequence<Idx...>)
 		{
-			return (func(tag, t[Idx].title) | ...);
+			return (func(tag, t[Idx].title)|...);
 		}
 		template <typename F, typename T, std::size_t N>
 		constexpr decltype(auto) matching(const std::string_view tag, 
@@ -121,7 +119,7 @@ struct has_member_##s{\
 #define SFIELD_INFO(NAME, MOTHER_BOARD, array, ...) \
 	static struct NAME##_info{\
 		constexpr NAME##_info() = default;\
-		const FieldWithMeta<Sakura::refl::detail::arraySize(array)> fd =\
+		constexpr static const FieldWithMeta<Sakura::refl::detail::arraySize(array)> fd =\
 		FieldWithMeta<Sakura::refl::detail::arraySize(array)>(#NAME,\
 			Sakura::refl::decay_type_name<decltype(std::declval<MOTHER_BOARD>().NAME)>(),\
 			offsetof(MOTHER_BOARD, NAME), array);\
@@ -134,7 +132,7 @@ struct has_member_##s{\
 #define SMETHOD_INFO(NAME, MOTHER_BOARD, array, ...) \
 	struct NAME##_info{\
 		constexpr NAME##_info() = default;\
-		const FieldWithMeta<Sakura::refl::detail::arraySize(array)> fd = \
+		constexpr static const FieldWithMeta<Sakura::refl::detail::arraySize(array)> fd = \
 		FieldWithMeta<Sakura::refl::detail::arraySize(array)>(#NAME,\
 		Sakura::refl::decay_type_name<decltype(&MOTHER_BOARD::NAME)>(),\
 		0, array);\
@@ -147,7 +145,7 @@ struct has_member_##s{\
 #define SSTATICFIELD_INFO(NAME, MOTHER_BOARD, array, ...)  \
 	struct NAME##_info{\
 		constexpr NAME##_info() = default;\
-		const FieldWithMeta<Sakura::refl::detail::arraySize(array)> fd = \
+		constexpr static const FieldWithMeta<Sakura::refl::detail::arraySize(array)> fd = \
 		FieldWithMeta<Sakura::refl::detail::arraySize(array)>(#NAME,\
 		Sakura::refl::decay_type_name<decltype(&MOTHER_BOARD::NAME)>(),\
 		0, array);\
@@ -160,7 +158,7 @@ struct has_member_##s{\
 #define SENUM_FIELD_INFO(NAME, MOTHER_BOARD, array, ...) \
 	struct NAME##_info{\
 		constexpr NAME##_info() = default;\
-		const FieldWithMeta<Sakura::refl::detail::arraySize(array)> fd = \
+		constexpr static const FieldWithMeta<Sakura::refl::detail::arraySize(array)> fd = \
 		FieldWithMeta<Sakura::refl::detail::arraySize(array)>(#NAME,\
 		Sakura::refl::decay_type_name<MOTHER_BOARD>(),\
 		0, array);\
@@ -208,10 +206,25 @@ namespace Sakura::refl
 
 	namespace detail
 	{
+		template <typename Tuple, typename F, std::size_t ...Indices>
+		constexpr void for_each_impl(Tuple&& tuple, F&& f, std::index_sequence<Indices...>) {
+			using swallow = int[];
+			(void)swallow{1,
+				(f(std::get<Indices>(std::forward<Tuple>(tuple))), void(), int{})...
+			};
+		}
+
+		template <typename Tuple, typename F>
+		constexpr void for_each(Tuple&& tuple, F&& f) {
+			constexpr std::size_t N = std::tuple_size<std::remove_reference_t<Tuple>>::value;
+			for_each_impl(std::forward<Tuple>(tuple), std::forward<F>(f),
+						std::make_index_sequence<N>{});
+		}
+		
 		template <typename Fn, typename Tuple>
 		inline constexpr void ForEachTuple(Tuple&& tuple, Fn&& fn)
 		{
-			hana::for_each(std::forward<Tuple>(tuple), fn);
+			for_each(std::forward<Tuple>(tuple), fn);
 		}
 
 		template<class ...Fs> struct overload_set;
@@ -389,10 +402,10 @@ namespace Sakura::refl
 	struct ClassInfo
 	{
 		inline static const constexpr char* GetClassName() { return "NULL"; }
-		inline static constexpr const auto all_methods() { return hana::make_tuple(); }
-		inline static constexpr const auto all_fields() { return hana::make_tuple(); }
-		inline static constexpr const auto all_static_fields() { return hana::make_tuple(); }
-		inline static constexpr const auto all_static_methods() { return hana::make_tuple(); }
+		inline static constexpr const auto all_methods() { return std::make_tuple(); }
+		inline static constexpr const auto all_fields() { return std::make_tuple(); }
+		inline static constexpr const auto all_static_fields() { return std::make_tuple(); }
+		inline static constexpr const auto all_static_methods() { return std::make_tuple(); }
 	};
 	template<typename T>
 	struct EnumInfo
@@ -410,10 +423,10 @@ namespace Sakura::refl
 	template<> struct ClassInfo<T>\
 	{\
 		inline static const constexpr char* GetClassName(){return #NAME;}\
-		inline static constexpr const auto all_fields() { return hana::make_tuple(); }\
-		inline static constexpr const auto all_static_fields() { return hana::make_tuple(); }\
-		inline static constexpr const auto all_methods() { return hana::make_tuple(); }\
-		inline static constexpr const auto all_static_methods() { return hana::make_tuple(); }\
+		inline static constexpr const auto all_fields() { return std::make_tuple(); }\
+		inline static constexpr const auto all_static_fields() { return std::make_tuple(); }\
+		inline static constexpr const auto all_methods() { return std::make_tuple(); }\
+		inline static constexpr const auto all_static_methods() { return std::make_tuple(); }\
 		inline static const constexpr Meta::MetaPiece meta[1] =\
 		{\
 			{"description", "Class of "#T}\
@@ -558,7 +571,7 @@ namespace Sakura::refl
 					{
 						static_assert(has_member_all_fields<ClassInfo<ClassName_C>>::value);
 						SClass<ClassName_C>::ForEachFieldAtomic(std::forward<ClassName_C>(value.*(field_schema.ptr)), fn);
-						constexpr int leng = hana::length(ClassInfo<ClassName_C>::all_static_fields());
+						constexpr int leng = std::tuple_size(ClassInfo<ClassName_C>::all_static_fields());
 						if constexpr (leng > 0)
 						{
 							static_assert(has_member_all_static_fields<ClassInfo<ClassName_C>>::value);
@@ -589,7 +602,6 @@ namespace Sakura::refl
 		{
 			if constexpr (has_member_all_methods<ClassInfo<ClassName>>::value)
 				__for_each_field_meta_impl<false>(info::all_fields(), fn);
-			return;
 		}
 		template <typename V, typename Fn>
 		inline static constexpr void ForEachField(V&& value, Fn&& fn)

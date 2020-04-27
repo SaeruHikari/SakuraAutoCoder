@@ -183,7 +183,7 @@ namespace Sakura::refl
 			output << cppast::keyword("auto") << cppast::punctuation(" ")
 				<< cppast::identifier(GetMetaGetterName(fieldSet)) << cppast::punctuation("()\n\t{\n");
 			output << punctuation("\t\t") << keyword("return") << punctuation(" ")
-				<< identifier("hana::make_tuple") << punctuation("(");
+				<< identifier("std::make_tuple") << punctuation("(");
 			auto i = 0u;
 			for (auto iter = fields.begin(); iter != fields.end(); iter++)
 			{

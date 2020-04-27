@@ -1,7 +1,7 @@
 ﻿/*
  * @Author: your name
  * @Date: 2020-04-22 00:49:46
- * @LastEditTime: 2020-04-26 02:27:06
+ * @LastEditTime: 2020-04-27 16:37:57
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /SakuraAutoCoder/CodeGen/UnitTest/Test.cpp
@@ -9,6 +9,7 @@
 #include <iostream>
 #include "include/refl.rule.hxx"
 #include "component.refl.hxx"
+#include "include/constexpr_map.hpp"
 
 using namespace Sakura::refl;
 
@@ -45,9 +46,27 @@ void auto_func_template(T&& field, const Field& meta,
 	}
 }
 
+
+struct Color
+{
+	float R;
+	float G;
+	float B;
+	float A;
+};
+constexpr static auto const colors =
+	Sakura::unordered_map_c<std::string_view, Color>({
+		{ "red"sv, { 255, 0, 0, 1 } },
+		{ "green"sv, { 0, 128, 0, 1 } },
+		{ "yellow"sv, { 255, 255, 0, 1 } },
+		{ "white"sv, { 255, 255, 255, 1 } },
+		{ "black"sv, { 0, 0, 0, 1 } }
+	});
+
 int main(void)
 {
 	constexpr bool value = has_member_attrib<Test::TestComponent>::value;
+	constexpr auto c = colors.find("red"sv)->second;
 	//std::cout << call([](int, int, int, int){return 5;}, arr);
 	Test::TestComponent testComp;
 	Test::TestComponentWrap testCompWrap;

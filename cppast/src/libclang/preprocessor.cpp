@@ -435,7 +435,8 @@ clang_preprocess_result clang_preprocess_impl(const libclang_compile_config& c,
             else
                 diagnostic.push_back(*str);
     };
-    if(true)
+    auto fast_preprocessing = detail::libclang_compile_config_access::fast_preprocessing(c);
+    if(fast_preprocessing)
     {
         auto cmd = get_preprocess_command(c, full_path.c_str(), macro_path);
         tpl::Process process(cmd, "",

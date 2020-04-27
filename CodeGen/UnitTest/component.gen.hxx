@@ -1,4 +1,4 @@
-//generated time:1587909050
+//generated time:1587961399
 //generated end
 
 
@@ -20,12 +20,6 @@ struct ClassInfo<Test::TestComponent>
 		{"refl", "null"}
 	};
 
-	inline static const constexpr Meta::MetaPiece attrib_meta[2] = 
-	{
-		{"meta", "SaeruHikari"},
-		{"refl", "null"}
-	};
-
 	inline static const constexpr Meta::MetaPiece testContainer_meta[2] = 
 	{
 		{"container", "This is a container!"},
@@ -44,21 +38,20 @@ struct ClassInfo<Test::TestComponent>
 		{"refl", "null"}
 	};
 
-	SFIELD_INFO(attrib, Test::TestComponent, attrib_meta);
 	SFIELD_INFO(testContainer, Test::TestComponent, testContainer_meta);
 	inline static const constexpr auto all_fields()
 	{
-		return hana::make_tuple(attrib_info(), testContainer_info());
+		return std::make_tuple(testContainer_info());
 	}
 	SSTATICFIELD_INFO(staticAttrib, Test::TestComponent, staticAttrib_meta);
 	inline static const constexpr auto all_static_fields()
 	{
-		return hana::make_tuple(staticAttrib_info());
+		return std::make_tuple(staticAttrib_info());
 	}
 	SMETHOD_INFO(Method, Test::TestComponent, Method_meta);
 	inline static const constexpr auto all_methods()
 	{
-		return hana::make_tuple(Method_info());
+		return std::make_tuple(Method_info());
 	}
 };
 
@@ -83,7 +76,7 @@ struct ClassInfo<Test::TestComponentWrap>
 	SFIELD_INFO(comp, Test::TestComponentWrap, comp_meta);
 	inline static const constexpr auto all_fields()
 	{
-		return hana::make_tuple(comp_info());
+		return std::make_tuple(comp_info());
 	}
 };
 
@@ -119,7 +112,7 @@ struct EnumInfo<Test::TestEnum>
 	SENUM_FIELD_INFO(E_THREE, Test::TestEnum, E_THREE_meta);
 	inline static const constexpr auto all_static_fields()
 	{
-		return hana::make_tuple(E_ONE_info(), E_TWO_info(), E_THREE_info());
+		return std::make_tuple(E_ONE_info(), E_TWO_info(), E_THREE_info());
 	}
 };
 
