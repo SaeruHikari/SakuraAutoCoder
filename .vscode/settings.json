@@ -78,7 +78,13 @@
         "random": "cpp",
         "memory_resource": "cpp",
         "__cxx_version": "cpp",
-        "version": "cpp"
+        "version": "cpp",
+        "codecvt": "cpp",
+        "condition_variable": "cpp",
+        "future": "cpp",
+        "list": "cpp",
+        "typeindex": "cpp",
+        "variant": "cpp"
     },
     "C_Cpp.default.configurationProvider": "vector-of-bool.cmake-tools"
 }

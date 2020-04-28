@@ -202,7 +202,9 @@ namespace Sakura::refl
 			detail::gen_all_fields(output, reflUnit, detail::FieldSet::E_STATIC_FIELDS);
 			detail::gen_all_fields(output, reflUnit, detail::FieldSet::E_METHODS);
 			detail::gen_all_fields(output, reflUnit, detail::FieldSet::E_STATIC_METHODS);
-			output << punctuation("};\n\n");
+			output << punctuation("};\n");
+			output << token_seq("SERIALIZE_IMPLEMENTATION_DEFAULT(")
+				<< identifier(detail::get_class_entity_Name_sp(c)) << punctuation(");\n\n");
 		}
 		ReflUnits[c.name()] = reflUnit;
 		return static_cast<bool>(output);

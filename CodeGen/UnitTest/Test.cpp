@@ -1,7 +1,7 @@
 ﻿/*
  * @Author: your name
  * @Date: 2020-04-22 00:49:46
- * @LastEditTime: 2020-04-28 19:19:21
+ * @LastEditTime: 2020-04-28 21:54:51
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /SakuraAutoCoder/CodeGen/UnitTest/Test.cpp
@@ -39,14 +39,21 @@ constexpr bool sv_same(std::string_view s, std::string_view t)
 {
     return s == t;
 }
+
 constexpr static const Sakura::detail::map_c<
 	Sakura::detail::element<std::string_view, std::string_view>, 0> 
 	dsd(nullptr);
+	
+
+
+
 int main(void)
 {
-	constexpr bool c = dsd.contains("sds"sv);
-	//std::cout << call([](int, int, int, int){return 5;}, arr);
 	Test::TestComponent testComp;
+	Sakura::Archive::SerializeToXml(testComp, "TestComponent.xml"sv);
+	testComp.attrib = 12332;
+	testComp = Sakura::Archive::DesrializeFromXml<Test::TestComponent>("TestComponent.xml"sv);
+	std::cout << testComp.attrib << std::endl;
 	Test::TestComponentWrap testCompWrap;
 	SClass<std::decay<decltype(testComp)>::type>::ForEachField(
         testComp, [](auto&& field, auto&& info){

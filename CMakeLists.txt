@@ -1,7 +1,18 @@
-cmake_minimum_required (VERSION 2.8.7)
+cmake_minimum_required(VERSION 3.0.0)
+
+set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+message(STATUS "TOOL CHAIN: ${CMAKE_TOOLCHAIN_FILE}")
+
 project (SReflCodeGen)
 
-enable_testing()
+find_package(Boost REQUIRED)
+set(Boost_USE_STATIC_LIBS ON)
+find_package(Boost COMPONENTS filesystem iostreams serialization REQUIRED)
+if(Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIRS})
+    link_directories(${Boost_LIBRARY_DIRS})
+endif()
+
 
 add_subdirectory(cppast)
 
@@ -41,10 +52,12 @@ add_executable(
 	CodeGen/Refl/codegen.enum.hpp
 	CodeGen/Refl/codegen.enum.cpp
 	)
+
 add_executable(
 	ReflTest
 	CodeGen/UnitTest/Test.cpp
 )
 target_link_libraries(SReflCodeGen PUBLIC cppast ${CLANG_LIBS})
+target_link_libraries(ReflTest ${Boost_LIBRARIES})
 
 

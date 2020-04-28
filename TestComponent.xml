@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<!DOCTYPE boost_serialization>
+<boost_serialization signature="serialization::archive" version="17">
+<target class_id="0" tracking_level="0" version="0">
+	<field>1.230000000e+02</field>
+	<field>TestComp</field>
+	<field>
+		<count>4</count>
+		<item_version>0</item_version>
+		<item>1.000000000e+00</item>
+		<item>2.000000000e+00</item>
+		<item>3.000000000e+00</item>
+		<item>4.000000000e+00</item>
+	</field>
+</target>
+</boost_serialization>
+

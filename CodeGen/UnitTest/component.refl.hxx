@@ -1,7 +1,7 @@
 /*
  * @Author: your name 
  * @Date: 2020-04-04 11:12:12
- * @LastEditTime: 2020-04-28 19:18:59
+ * @LastEditTime: 2020-04-28 21:14:59
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit 
  * @FilePath: \undefinedd :\Coding\SakuraAutoCoder\CodeGen\component.refl.hxx
@@ -39,7 +39,7 @@ namespace Test
 	};
 	
 	struct [[refl]] TestComponentWrap
-	{     
+	{
 		TestComponent comp [[refl]][[description("Test wrapping of reflection component")]];
 		[[refl]][[st("OHHHHHH")]]
 		inline static const TestComponent statComp;
@@ -63,7 +63,7 @@ namespace Test
 }
 
 #include "component.gen.hxx"    
- 
+
 namespace Sakura::Refl
 {
 	template<> inline const constexpr bool isAtomic<std::vector<float>>(){return true;}

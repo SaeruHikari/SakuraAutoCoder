@@ -1,14 +1,14 @@
 ﻿/*
  * @Author: your name
  * @Date: 2020-04-04 12:32:09
- * @LastEditTime: 2020-04-28 19:16:41
+ * @LastEditTime: 2020-04-28 21:34:47
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \undefinedd:\Coding\SakuraAutoCoder\CodeGen\refl.rule.hxx
  */
 #pragma once
 #define META_USE_HANA
-
+#define SERIALIZE_USE_BOOST
 
 #include <atomic>
 #include <functional>
@@ -592,10 +592,75 @@ namespace Sakura::Refl
 	}
 }
 
+#ifdef SERIALIZE_USE_BOOST
+#include <boost/serialization/nvp.hpp>
+#include <boost/archive/binary_oarchive.hpp> 
+#include <boost/archive/binary_iarchive.hpp> 
+#include <boost/archive/xml_iarchive.hpp> 
+#include <boost/archive/xml_oarchive.hpp> 
+#include <boost/serialization/vector.hpp>
+#include <fstream> 
 namespace Sakura::Archive
 {
-	
+	template<class Archive, typename T>
+	struct serializer
+	{
+		static void serialize(Archive& archive, T& d, const unsigned int version)
+		{
+			Sakura::Refl::SClass<std::decay_t<T>>::ForEachField(
+				std::forward<T>(d),
+				[&](auto&& field, auto&& meta){
+					archive & BOOST_SERIALIZATION_NVP(field);
+				});
+		}
+	};
+
+	template<typename T>
+	void SerializeToXml(T&& target, const std::string_view path)
+	{
+		std::ofstream file(path); 
+		boost::archive::xml_oarchive oa(file); 
+		oa & BOOST_SERIALIZATION_NVP(target); 
+	}
+
+	template<typename T>
+	T&& DesrializeFromXml(const std::string_view path)
+	{
+		std::ifstream file(path); 
+		boost::archive::xml_iarchive ia(file); 
+		T dr;
+		ia >> BOOST_SERIALIZATION_NVP(dr); 
+		return std::move(dr);
+	}
+
+	template<typename T>
+	void SerializeToBinary(T&& target, const std::string_view path)
+	{
+		std::ofstream file(path); 
+		boost::archive::binary_oarchive oa(file); 
+		oa & BOOST_SERIALIZATION_NVP(target); 
+	}
+
+	template<typename T>
+	T&& DesrializeFromBinary(const std::string_view path)
+	{
+		std::ifstream file(path); 
+		boost::archive::binary_iarchive ia(file); 
+		T dr;
+		ia >> BOOST_SERIALIZATION_NVP(dr); 
+		return std::move(dr);
+	}
 }
+#define SERIALIZE_IMPLEMENTATION_DEFAULT(T) \
+namespace boost::serialization \
+{\
+    template<class Archive>\
+    void serialize(Archive& archive, T& d, const unsigned int version)\
+    {\
+        Sakura::Archive::serializer<Archive, std::decay_t<T>>::serialize(archive, d, version);\
+    }\
+} 
+#endif
 
 namespace Sakura
 {

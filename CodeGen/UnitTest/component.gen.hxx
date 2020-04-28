@@ -1,4 +1,4 @@
-//generated time:1588072565
+//generated time:1588079707
 //generated end
 
 
@@ -67,6 +67,7 @@ struct ClassInfo<Test::TestComponent>
 		return Sakura::make_tuple(Method_info());
 	}
 };
+SERIALIZE_IMPLEMENTATION_DEFAULT(Test::TestComponent);
 
 template<>
 struct ClassInfo<Test::TestComponentWrap>
@@ -106,6 +107,7 @@ struct ClassInfo<Test::TestComponentWrap>
 		return Sakura::make_tuple(statComp_info());
 	}
 };
+SERIALIZE_IMPLEMENTATION_DEFAULT(Test::TestComponentWrap);
 
 template<>
 struct EnumInfo<Test::TestEnum>
