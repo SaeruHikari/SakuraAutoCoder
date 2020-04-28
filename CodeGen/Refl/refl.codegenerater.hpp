@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2020-04-23 14:35:07
- * @LastEditTime: 2020-04-23 14:44:30
+ * @LastEditTime: 2020-04-28 19:12:59
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /SakuraAutoCoder/CodeGen/Refl/refl.codegenerater.hpp
@@ -109,7 +109,7 @@ namespace Sakura::refl
         std::string prefix; // the current prefix string
         out << "\n#pragma once\n";
         out << "#include <refl.rule.hxx>\n\n";
-        out << "using namespace Sakura::refl;\n\n";
+        out << "using namespace Sakura::Refl;\n\n";
         // recursively visit file and all children
         cppast::visit(file, [&](const cppast::cpp_entity& e, cppast::visitor_info info)
         {

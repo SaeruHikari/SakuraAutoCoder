@@ -1,31 +1,43 @@
 ﻿/*
  * @Author: your name
  * @Date: 2020-04-04 12:32:09
- * @LastEditTime: 2020-04-28 00:39:13
+ * @LastEditTime: 2020-04-28 19:16:41
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \undefinedd:\Coding\SakuraAutoCoder\CodeGen\refl.rule.hxx
  */
 #pragma once
+#define META_USE_HANA
+
+
 #include <atomic>
 #include <functional>
 #include <iterator>
-#include <memory>
 #include <string>
-#include <stdexcept>
 #include <type_traits>
-#include <map>
-#include <vector>
 #include <cassert>
 #include <constexpr_map.hpp>
-
+#ifdef META_USE_STL
+namespace Sakura
+{
+	using std::tuple;
+	using std::make_tuple;
+}
+#elif defined(META_USE_HANA)
+#include <boost/hana.hpp>
+namespace Sakura
+{
+	using boost::hana::tuple;
+	using boost::hana::make_tuple;
+}
+#endif
 using namespace std;
 namespace std::pmr
 {
 	struct string;
 }
 
-namespace Sakura::refl
+namespace Sakura::Refl
 {
 	namespace detail 
 	{
@@ -71,7 +83,7 @@ struct has_member_##s{\
 		constexpr NAME##_info() = default;\
 		constexpr static const FieldWithMeta<Sakura::detail::____map_size<decltype(map)>::value> info =\
 		FieldWithMeta<Sakura::detail::____map_size<decltype(map)>::value>(#NAME,\
-			Sakura::refl::decay_type_name<decltype(std::declval<MOTHER_BOARD>().NAME)>(),\
+			Sakura::Refl::decay_type_name<decltype(std::declval<MOTHER_BOARD>().NAME)>(),\
 			offsetof(MOTHER_BOARD, NAME), map);\
 		decltype(&MOTHER_BOARD::NAME) ptr = &MOTHER_BOARD::NAME;\
 	};
@@ -81,7 +93,7 @@ struct has_member_##s{\
 		constexpr NAME##_info() = default;\
 		constexpr static const FieldWithMeta<Sakura::detail::____map_size<decltype(map)>::value> info = \
 		FieldWithMeta<Sakura::detail::____map_size<decltype(map)>::value>(#NAME,\
-		Sakura::refl::decay_type_name<decltype(&MOTHER_BOARD::NAME)>(), 0, map);\
+		Sakura::Refl::decay_type_name<decltype(&MOTHER_BOARD::NAME)>(), 0, map);\
 		decltype(&MOTHER_BOARD::NAME) ptr = &MOTHER_BOARD::NAME;\
 	};
 
@@ -90,7 +102,7 @@ struct has_member_##s{\
 		constexpr NAME##_info() = default;\
 		constexpr static const FieldWithMeta<Sakura::detail::____map_size<decltype(map)>::value> info = \
 		FieldWithMeta<Sakura::detail::____map_size<decltype(map)>::value>(#NAME,\
-		Sakura::refl::decay_type_name<decltype(&MOTHER_BOARD::NAME)>(), 0, map);\
+		Sakura::Refl::decay_type_name<decltype(&MOTHER_BOARD::NAME)>(), 0, map);\
 		decltype(&MOTHER_BOARD::NAME) ptr = &MOTHER_BOARD::NAME;\
 	};
 
@@ -99,11 +111,11 @@ struct has_member_##s{\
 		constexpr NAME##_info() = default;\
 		constexpr static const FieldWithMeta<Sakura::detail::____map_size<decltype(map)>::value> info = \
 		FieldWithMeta<Sakura::detail::____map_size<decltype(map)>::value>(#NAME,\
-		Sakura::refl::decay_type_name<MOTHER_BOARD>(), 0, map);\
+		Sakura::Refl::decay_type_name<MOTHER_BOARD>(), 0, map);\
 		MOTHER_BOARD val = MOTHER_BOARD::NAME;\
 	};
 
-namespace Sakura::refl
+namespace Sakura::Refl
 {
 	template <typename T>
 	constexpr std::string_view type_name() 
@@ -147,17 +159,16 @@ namespace Sakura::refl
 			};
 		}
 
-		template <typename Tuple, typename F>
-		constexpr void for_each(Tuple&& tuple, F&& f) {
-			constexpr std::size_t N = std::tuple_size<std::remove_reference_t<Tuple>>::value;
-			for_each_impl(std::forward<Tuple>(tuple), std::forward<F>(f),
-						std::make_index_sequence<N>{});
-		}
-		
 		template <typename Fn, typename Tuple>
 		inline constexpr void ForEachTuple(Tuple&& tuple, Fn&& fn)
 		{
-			for_each(std::forward<Tuple>(tuple), fn);
+		#ifdef META_USE_STL
+			constexpr std::size_t N = std::tuple_size<std::remove_reference_t<Tuple>>::value;
+			for_each_impl(std::forward<Tuple>(tuple), std::forward<Fn>(fn),
+						std::make_index_sequence<N>{});
+		#elif defined(META_USE_HANA)
+			boost::hana::for_each(std::forward<Tuple>(tuple), fn);
+		#endif
 		}
 
 		template<class ...Fs> struct overload_set;
@@ -288,16 +299,16 @@ namespace Sakura::refl
 	{
 		inline static const constexpr std::string_view GetClassName()
 		{ 
-			return Sakura::refl::decay_type_name<T>(); 
+			return Sakura::Refl::decay_type_name<T>(); 
 		}
 		inline static const constexpr std::string_view GetPrettyName()
 		{ 
-			return Sakura::refl::decay_type_name<T>(); 
+			return Sakura::Refl::decay_type_name<T>(); 
 		}
-		inline static constexpr const auto all_methods() { return std::make_tuple(); }
-		inline static constexpr const auto all_fields() { return std::make_tuple(); }
-		inline static constexpr const auto all_static_fields() { return std::make_tuple(); }
-		inline static constexpr const auto all_static_methods() { return std::make_tuple(); }
+		inline static constexpr const auto all_methods() { return Sakura::make_tuple(); }
+		inline static constexpr const auto all_fields() { return Sakura::make_tuple(); }
+		inline static constexpr const auto all_static_fields() { return Sakura::make_tuple(); }
+		inline static constexpr const auto all_static_methods() { return Sakura::make_tuple(); }
 	};
 	template<typename T>
 	struct EnumInfo
@@ -312,10 +323,10 @@ namespace Sakura::refl
 	template<> struct ClassInfo<T>\
 	{\
 		inline static const constexpr std::string_view GetClassName(){return #NAME;}\
-		inline static constexpr const auto all_fields() { return std::make_tuple(); }\
-		inline static constexpr const auto all_static_fields() { return std::make_tuple(); }\
-		inline static constexpr const auto all_methods() { return std::make_tuple(); }\
-		inline static constexpr const auto all_static_methods() { return std::make_tuple(); }\
+		inline static constexpr const auto all_fields() { return Sakura::make_tuple(); }\
+		inline static constexpr const auto all_static_fields() { return Sakura::make_tuple(); }\
+		inline static constexpr const auto all_methods() { return Sakura::make_tuple(); }\
+		inline static constexpr const auto all_static_methods() { return Sakura::make_tuple(); }\
 	};
 
 
@@ -579,136 +590,18 @@ namespace Sakura::refl
 	{
 		return SClass<T>::GetTypeId();
 	}
+}
 
-
-
-
-
-	// Dynamic Part
-
-	class Object final
-	{
-	public:
-		Object();
-		template<typename T>
-		explicit Object(T&& t);
-
-		Object(Object&& o) noexcept
-			: deleter_(NoOp)
-		{
-			*this = std::move(o);
-		}
-		Object& operator=(Object&& o) noexcept
-		{
-			// Release existing resource if any.
-			deleter_(data_);
-
-			id_ = o.id_;
-			data_ = o.data_;
-			deleter_ = move(o.deleter_);
-			o.deleter_ = NoOp;
-			return *this;
-		}
-		Object(const Object& o) = delete;
-		Object& operator=(const Object& o) = delete;
-
-		~Object()
-		{
-			deleter_(data_);
-		}
-
-		template<typename T>
-		bool IsT() const;
-
-		template<typename T>
-		const T& GetT() const
-		{
-			return *static_cast<T*>(data_);
-		}
-		bool IsVoid() const;
-	private:
-		size_t id_;
-		void* data_ = nullptr;
-		std::function<void(void*)> deleter_;
-	};
-
-
-
-	struct IType
-	{
-		virtual ~IType() = default;
-		virtual const char* GetName() const = 0;
-	};
-
-	enum EFlag : uint32_t
-	{
-		EFunction = 1,
-		EMethod = EFunction << 1,
-		EAtomic = EMethod << 1,
-		EStruct = EAtomic << 1,
-		EClass = EStruct << 1,
-		EEnum = EClass << 1,
-		EConst = EEnum << 1,
-		EPtr = EConst << 1,
-		EReference = EPtr << 1,
-		ETemplate = EReference << 1
-	};
-	using EFlags = uint32_t;
-
-
-
-	template <typename T>
-	inline Object::Object(T&& t)
-		: id_(GetTypeId<std::decay_t<T>>()),
-		data_(new std::decay_t<T>(std::forward<T>(t)))
-	{
-		// This is not part of the initializer list because it
-		// doesn't compile on VC.
-		deleter_ = [](void* data)
-		{
-			delete static_cast<std::decay_t<T>*>(data);
-		};
-	}
-
-	inline Object::Object()
-		: id_(SClass<void>::GetTypeId())
-		, deleter_(NoOp)
-	{
-
-	}
-
-	template<typename T>
-	inline bool Object::IsT() const
-	{
-		return (SClass<T>::GetTypeId() == id_);
-	}
-
-	template<typename T>
-	inline constexpr Reference::Reference(T& t)
-		: id_(GetTypeId<std::remove_reference_t<T>>())
-		, data_((void*)&t)
-	{
-
-	}
-
-	inline constexpr Reference::Reference()
-		: id_(GetTypeId<std::nullptr_t>()), data_(nullptr)
-	{
-			
-	}
-
-	template <typename T>
-	inline bool Reference::IsT() const
-	{
-		return (SClass<T>::GetTypeId() == id_);
-	}
+namespace Sakura::Archive
+{
+	
 }
 
 namespace Sakura
 {
 	template<class... Fs>
-	const typename refl::detail::overload_visitor<Fs...>::type overload(Fs... x)
+	const typename Refl::detail::overload_visitor<Fs...>::type overload(Fs... x)
 	{
-		return refl::detail::overload_visitor<Fs...>(x...);
+		return Refl::detail::overload_visitor<Fs...>(x...);
 	}
 }

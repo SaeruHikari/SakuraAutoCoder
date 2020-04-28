@@ -1,7 +1,7 @@
 ﻿/*
  * @Author: your name
  * @Date: 2020-04-22 00:49:46
- * @LastEditTime: 2020-04-28 01:20:19
+ * @LastEditTime: 2020-04-28 19:19:21
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /SakuraAutoCoder/CodeGen/UnitTest/Test.cpp
@@ -11,7 +11,7 @@
 #include "component.refl.hxx"
 #include "include/constexpr_map.hpp"
 
-using namespace Sakura::refl;
+using namespace Sakura::Refl;
 
 has_member(attrib);
 
@@ -20,11 +20,11 @@ void auto_func_template(T&& field, const Field& meta,
 	const std::string_view prefix)
 {
 	using TT = std::decay_t<decltype(field)>;
-	if constexpr (Sakura::refl::isAtomic<TT>())
+	if constexpr (Sakura::Refl::isAtomic<TT>())
 		std::cout << prefix << ": "
 			 << meta.type << " - " << meta.name << std::endl;
 	else if constexpr (
-		Sakura::refl::has_member_all_fields<ClassInfo<TT>>::value)
+		Sakura::Refl::has_member_all_fields<ClassInfo<TT>>::value)
 	{
 		std::cout << "FOREACH OF CHILD FIELD:\n";
 		SClass<TT>::ForEachField(field, 

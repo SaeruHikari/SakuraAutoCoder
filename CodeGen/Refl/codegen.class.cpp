@@ -74,7 +74,7 @@ namespace Sakura::refl
 				<< cppast::whitespace << identifier("GetClassName") << punctuation("()") 
 				<< cppast::newl << cppast::punctuation("\n\t{\n");
 			output << cppast::punctuation("\t\t") << keyword("return") << cppast::whitespace
-					<< cppast::token_seq("Sakura::refl::decay_type_name<")
+					<< cppast::token_seq("Sakura::Refl::decay_type_name<")
 					<< cppast::identifier(get_class_entity_Name_sp(c)) << cppast::token_seq(">()")
 					<< cppast::punctuation(";\n\t}\n");
 		}
@@ -149,7 +149,7 @@ namespace Sakura::refl
 				reflUnit.unitMetas.insert(attrib);
 			}
 			if(reflUnit.unitMetas.find("atomic") != reflUnit.unitMetas.end())
-				output << token_seq("template<> inline const constexpr bool Sakura::refl::isAtomic<")
+				output << token_seq("template<> inline const constexpr bool Sakura::Refl::isAtomic<")
 				<< identifier(reflUnit.unitName)
 				<< token_seq(">(){return true;}\n");
 			if(reflUnit.unitMetas.find("refl") != reflUnit.unitMetas.end())

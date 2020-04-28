@@ -1,19 +1,19 @@
-//generated time:1588010868
+//generated time:1588072565
 //generated end
 
 
 #pragma once
 #include <refl.rule.hxx>
 
-using namespace Sakura::refl;
+using namespace Sakura::Refl;
 
-template<> inline const constexpr bool Sakura::refl::isAtomic<Test::wtf>(){return true;}
+template<> inline const constexpr bool Sakura::Refl::isAtomic<Test::wtf>(){return true;}
 template<>
 struct ClassInfo<Test::TestComponent>
 {
 	inline static const constexpr const std::string_view GetClassName() 
 	{
-		return Sakura::refl::decay_type_name<Test::TestComponent>();
+		return Sakura::Refl::decay_type_name<Test::TestComponent>();
 	}
 	inline static const constexpr const std::string_view GetPrettyName() 
 	{
@@ -54,17 +54,17 @@ struct ClassInfo<Test::TestComponent>
 	SFIELD_INFO(testContainer, Test::TestComponent, testContainer_meta);
 	inline static const constexpr auto all_fields()
 	{
-		return std::make_tuple(attrib_info(), name_info(), testContainer_info());
+		return Sakura::make_tuple(attrib_info(), name_info(), testContainer_info());
 	}
 	SSTATICFIELD_INFO(staticAttrib, Test::TestComponent, staticAttrib_meta);
 	inline static const constexpr auto all_static_fields()
 	{
-		return std::make_tuple(staticAttrib_info());
+		return Sakura::make_tuple(staticAttrib_info());
 	}
 	SMETHOD_INFO(Method, Test::TestComponent, Method_meta);
 	inline static const constexpr auto all_methods()
 	{
-		return std::make_tuple(Method_info());
+		return Sakura::make_tuple(Method_info());
 	}
 };
 
@@ -73,7 +73,7 @@ struct ClassInfo<Test::TestComponentWrap>
 {
 	inline static const constexpr const std::string_view GetClassName() 
 	{
-		return Sakura::refl::decay_type_name<Test::TestComponentWrap>();
+		return Sakura::Refl::decay_type_name<Test::TestComponentWrap>();
 	}
 	inline static const constexpr const std::string_view GetPrettyName() 
 	{
@@ -98,12 +98,12 @@ struct ClassInfo<Test::TestComponentWrap>
 	SFIELD_INFO(wtf, Test::TestComponentWrap, wtf_meta);
 	inline static const constexpr auto all_fields()
 	{
-		return std::make_tuple(comp_info(), wtf_info());
+		return Sakura::make_tuple(comp_info(), wtf_info());
 	}
 	SSTATICFIELD_INFO(statComp, Test::TestComponentWrap, statComp_meta);
 	inline static const constexpr auto all_static_fields()
 	{
-		return std::make_tuple(statComp_info());
+		return Sakura::make_tuple(statComp_info());
 	}
 };
 
@@ -134,7 +134,7 @@ struct EnumInfo<Test::TestEnum>
 	SENUM_FIELD_INFO(E_THREE, Test::TestEnum, E_THREE_meta);
 	inline static const constexpr auto all_static_fields()
 	{
-		return std::make_tuple(E_ONE_info(), E_TWO_info(), E_THREE_info());
+		return Sakura::make_tuple(E_ONE_info(), E_TWO_info(), E_THREE_info());
 	}
 };
 
